@@ -1,0 +1,844 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Keepnasty 2026 &mdash; Keeper Board</title><link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet"><style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f7f6f2;--surface:#fff;--surface2:#f0efeb;--border:#e2e0d8;--border2:#d0cec4;
+  --ink:#1a1916;--ink2:#4a4844;--muted:#9a9890;
+  --kept-bg:#f0f7ed;--kept-border:#4a9e3f;
+  --traded-bg:#f5f0fa;--traded-border:#8b5cf6;--traded-text:#5b21b6;
+  --nopick-bg:#fafaf9;--nopick-border:#d0cec4;
+  --gold:#f0c040;
+  --qb-bg:#dbeafe;--qb:#1d4ed8;
+  --rb-bg:#dcfce7;--rb:#166534;
+  --wr-bg:#fce7f3;--wr:#9d174d;
+  --te-bg:#fef3c7;--te:#92400e;
+  --dst-bg:#f3f4f6;--dst:#374151;
+  --round-col:38px;--team-col:152px;
+}
+body{background:var(--bg);color:var(--ink);font-family:'IBM Plex Sans',sans-serif;font-size:13px;min-height:100vh;overflow-x:auto}
+.app-nav{position:sticky;top:0;z-index:400;background:var(--ink);border-bottom:3px solid var(--gold)}
+.nav-inner{display:flex;align-items:stretch;padding:0 20px}
+.nav-brand{display:flex;flex-direction:column;justify-content:center;padding:10px 20px 10px 0;border-right:1px solid #333;margin-right:4px}
+.nav-brand .sub{font-family:'IBM Plex Mono',monospace;font-size:9px;color:#888;letter-spacing:1px}
+.nav-brand h1{font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:500;color:#fff}
+.nav-tab{font-family:'IBM Plex Mono',monospace;font-size:11px;color:#aaa;padding:0 16px;border:none;background:transparent;cursor:pointer;letter-spacing:.5px;border-bottom:3px solid transparent;margin-bottom:-3px;transition:all .15s;white-space:nowrap}
+.nav-tab:hover{color:#fff}.nav-tab.active{color:var(--gold);border-bottom-color:var(--gold)}
+.nav-legend{margin-left:auto;display:flex;gap:12px;align-items:center}
+.leg{display:flex;align-items:center;gap:5px;font-size:10px;color:#bbb;font-family:'IBM Plex Mono',monospace;white-space:nowrap}
+.leg-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+.page{display:none}.page.active{display:block}
+.filter-bar{background:var(--surface);border-bottom:1px solid var(--border);padding:8px 20px;display:flex;gap:6px;align-items:center;flex-wrap:wrap;position:sticky;z-index:300}
+.filter-label{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:1px;margin-right:2px;white-space:nowrap}
+.fbtn{font-family:'IBM Plex Mono',monospace;font-size:11px;padding:3px 11px;border-radius:20px;border:1px solid var(--border2);background:transparent;color:var(--ink2);cursor:pointer;transition:all .12s;white-space:nowrap}
+.fbtn:hover{background:var(--surface2)}.fbtn.active{background:var(--ink);color:#fff;border-color:var(--ink)}
+.fbtn.amber{border-color:#b45309;color:#b45309;font-weight:500}
+.fbtn.amber:hover,.fbtn.amber.active{background:#b45309;color:#fff;border-color:#b45309}
+.fbtn.green{border-color:#166534;color:#166534;font-weight:500}
+.fbtn.green:hover,.fbtn.green.active{background:#166534;color:#fff;border-color:#166634}
+.divider-v{width:1px;background:var(--border2);height:20px;margin:0 4px}
+.team-header-bar{position:sticky;z-index:200;background:var(--surface);border-bottom:2px solid var(--border2);overflow:hidden;width:100%}
+.team-header-inner{display:flex;width:max-content;will-change:transform}
+.rnd-spacer{width:var(--round-col);min-width:var(--round-col);flex-shrink:0;border-right:2px solid var(--border2)}
+.team-col-header{width:var(--team-col);min-width:var(--team-col);flex-shrink:0;padding:8px 8px 6px;border-right:1px solid var(--border);text-align:center;cursor:pointer;transition:background .15s}
+.team-col-header:hover{background:#f0f7ed}.team-col-header:last-child{border-right:none}
+.tch-name{font-weight:600;font-size:11px;color:var(--ink);line-height:1.2}
+.tch-owner{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted)}
+.tch-hint{font-size:9px;color:#4a9e3f;font-family:'IBM Plex Mono',monospace;opacity:0;margin-top:1px}
+.team-col-header:hover .tch-hint{opacity:1}
+.scroll-container{overflow-x:auto}
+table.board-table{border-collapse:separate;border-spacing:0;width:max-content}
+td.round-cell{position:sticky;left:0;z-index:10;background:var(--surface);border-right:2px solid var(--border2);border-bottom:1px solid var(--border);width:var(--round-col);min-width:var(--round-col);text-align:center;vertical-align:middle;padding:4px 2px}
+.round-label{font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:500;writing-mode:vertical-rl;transform:rotate(180deg);letter-spacing:1px}
+.round-label.t1{color:#1d4ed8}.round-label.t2{color:#166534}.round-label.t3{color:#92400e}
+td.player-cell{border-right:1px solid var(--border);border-bottom:1px solid var(--border);padding:4px;width:var(--team-col);min-width:var(--team-col);vertical-align:top}
+td.player-cell:last-child{border-right:none}
+tr.tier-row td{background:#1a1916;padding:5px 12px;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:1.5px;color:var(--gold);border-top:2px solid #1a1916;border-bottom:2px solid #1a1916}
+tr.tier-row td.round-cell{background:#1a1916;border-right:2px solid var(--gold);position:sticky;left:0;z-index:10}
+.card{border-radius:6px;padding:6px 8px 5px;border:1.5px solid transparent;position:relative;transition:all .15s;margin-bottom:3px;cursor:pointer;user-select:none}
+.card:last-child{margin-bottom:0}
+.card:hover{transform:translateY(-1px);box-shadow:0 2px 8px rgba(0,0,0,.1)}
+.card.kept{background:var(--kept-bg);border-color:var(--kept-border)}
+.card.no_pick,.card.open{border:1.5px dashed;display:flex;align-items:center;justify-content:center;min-height:50px;flex-direction:column;gap:2px;cursor:default}
+.card.no_pick{background:var(--nopick-bg);border-color:var(--nopick-border)}
+.card.open{background:#f7fbf7;border-color:#a3cfaa}
+.card.keeper-on{outline:3px solid var(--gold);outline-offset:1px;background:#fffbeb!important;border-color:#d97706!important}
+.card.tier-full-clickable{opacity:.35;cursor:pointer}
+.card.dimmed{opacity:.08!important;pointer-events:none}
+.keeper-star{position:absolute;top:3px;left:4px;font-size:11px;color:var(--gold);display:none}
+.keeper-on .keeper-star{display:block}
+.status-pip{position:absolute;top:4px;right:5px;font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:.5px;font-weight:500}
+.keeper-on .status-pip{color:#92400e}
+
+.card-name{font-size:12px;font-weight:600;color:var(--ink);line-height:1.3;padding-right:24px;padding-left:14px;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card-meta{display:flex;align-items:center;gap:3px;padding-left:14px;flex-wrap:nowrap;overflow:hidden;min-width:0}
+.pos-badge{font-family:'IBM Plex Mono',monospace;font-size:9px;font-weight:500;padding:1px 4px;border-radius:3px;flex-shrink:0}
+.pos-QB{background:var(--qb-bg);color:var(--qb)}.pos-RB{background:var(--rb-bg);color:var(--rb)}
+.pos-WR{background:var(--wr-bg);color:var(--wr)}.pos-TE{background:var(--te-bg);color:var(--te)}
+.pos-DST{background:var(--dst-bg);color:var(--dst)}
+.rank-num{font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:500}
+.rank-elite{color:#b45309}.rank-great{color:#1d4ed8}.rank-solid{color:#374151}.rank-fringe{color:#9ca3af}
+.pos-rank{font-family:'IBM Plex Mono',monospace;font-size:9px;font-weight:500;color:var(--muted);margin-left:1px;flex-shrink:0}.meta-label{font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--muted);letter-spacing:.3px;flex-shrink:0;opacity:.7;margin-left:3px}.meta-sep{font-size:9px;color:#ccc;margin:0 2px;flex-shrink:0;line-height:1}.av-num{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);margin-left:2px}
+.av-value{color:#166534;font-weight:600}
+.av-fair{color:#374151}
+.av-costly{color:#9a9890}
+.nfl-tag{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);margin-left:auto}
+.no-pick-label{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:.5px}
+.no-pick-sub{font-size:9px;color:#c0bdb5;text-align:center;font-family:'IBM Plex Mono',monospace;padding:0 4px}
+.open-pick-num{font-family:'IBM Plex Mono',monospace;font-size:12px;color:#4a9e3f;font-weight:600}
+.open-pick-sub{font-size:9px;color:#7dcc7d;font-family:'IBM Plex Mono',monospace}.open-released{font-size:9px;color:#b52b2b;font-family:'IBM Plex Mono',monospace;font-weight:500;margin-top:2px;text-align:center;cursor:pointer}
+.extra-badge{font-family:'IBM Plex Mono',monospace;font-size:8px;color:#1d4ed8;background:#dbeafe;border:1px solid #93c5fd;border-radius:3px;padding:0 3px;flex-shrink:0}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;display:none;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:var(--surface);border-radius:12px;padding:24px;max-width:420px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.modal h3{font-size:15px;font-weight:600;margin-bottom:6px}
+.modal p{font-size:13px;color:var(--ink2);margin-bottom:16px;line-height:1.5}
+.modal-current{background:var(--surface2);border-radius:8px;padding:12px;margin-bottom:16px}
+.modal-actions{display:flex;justify-content:flex-end}
+.modal-cancel{font-size:12px;padding:6px 16px;border-radius:8px;border:1px solid var(--border2);background:transparent;cursor:pointer;font-family:'IBM Plex Mono',monospace;color:var(--ink2)}
+.modal-cancel:hover{background:var(--surface2)}
+.roster-page-inner{padding:20px}
+.roster-header{display:flex;align-items:center;gap:16px;margin-bottom:14px;padding-bottom:12px;border-bottom:2px solid var(--border2)}
+.roster-team-name{font-size:20px;font-weight:600}
+.roster-owner-label{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--muted);margin-top:2px}
+.roster-table{width:100%;border-collapse:collapse;font-size:13px}
+.roster-table th{background:var(--surface2);font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.8px;color:var(--muted);padding:8px 12px;text-align:left;border-bottom:2px solid var(--border2);white-space:nowrap;position:sticky;top:0;z-index:5}
+.roster-table td{padding:8px 12px;border-bottom:1px solid var(--border);vertical-align:middle}
+.roster-table tr:hover td{background:var(--surface2)}
+.rt-row.rt-keeper td{background:#fffbeb}
+.rt-row.rt-keeper:hover td{background:#fff3c4}
+.rt-player-name{font-weight:600;display:flex;align-items:center;gap:7px}
+.status-tag{font-family:'IBM Plex Mono',monospace;font-size:10px;padding:2px 8px;border-radius:10px;white-space:nowrap}
+.st-keeper{background:#fffbeb;color:#92400e;border:1px solid #d97706}
+.st-roster{background:var(--kept-bg);color:#1e5c18;border:1px solid var(--kept-border)}
+.st-traded{background:var(--traded-bg);color:var(--traded-text);border:1px solid var(--traded-border)}
+.fa-stats{display:flex;gap:16px;padding:10px 20px;background:var(--surface);border-bottom:1px solid var(--border);font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted)}
+.fa-stats strong{color:var(--ink)}
+.fa-table-wrap{overflow-x:auto;padding:0 20px 20px}
+.fa-table{width:100%;border-collapse:collapse;min-width:600px}
+.fa-table th{background:var(--surface2);font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.8px;color:var(--muted);padding:8px 12px;text-align:left;border-bottom:2px solid var(--border2);white-space:nowrap}
+.fa-table td{padding:8px 12px;border-bottom:1px solid var(--border);font-size:12px;vertical-align:middle}
+.fa-table tr:hover td{background:var(--surface2)}
+.fa-table tr.tier-header td{background:#f0efeb;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:1px;color:var(--ink2);font-weight:500;padding:4px 12px;border-bottom:1px solid var(--border2)}
+.fa-source{font-family:'IBM Plex Mono',monospace;font-size:10px;padding:2px 7px;border-radius:10px;white-space:nowrap}
+.fa-source.unrostered{background:var(--kept-bg);color:#1e5c18;border:1px solid var(--kept-border)}
+.fa-source.released{background:#fdf2f2;color:#b52b2b;border:1px solid #fca5a5}.fa-source.stranded{background:#fef3c7;color:#92400e;border:1px solid #fde68a}
+
+.card.released-player{background:#fdf2f2;border:1.5px dashed #fca5a5;opacity:.55;cursor:pointer}
+.card.released-player .card-name{text-decoration:line-through;color:#b52b2b}
+</style></head><body><nav class="app-nav" id="appNav"><div class="nav-inner"><div class="nav-brand"><div class="sub">KEEPNASTY &middot; 2026</div><h1>Keeper Board</h1></div><button class="nav-tab active" onclick="showPage('board',this)">Draft Board</button><button class="nav-tab" id="rosterTab" onclick="showPage('roster',this)" style="display:none">&#8592; Roster</button><button class="nav-tab" onclick="showPage('fa',this)">Free Agents</button><div class="nav-legend"><div class="leg"><div class="leg-dot" style="background:#4a9e3f"></div>Keeping (click to release)</div><div class="leg"><div class="leg-dot" style="background:#fafaf9;border:1.5px dashed #d0cec4"></div>No Pick</div><div class="leg"><div class="leg-dot" style="background:#f7fbf7;border:1.5px dashed #a3cfaa"></div>Open Pick</div><div class="leg"><div class="leg-dot" style="background:#fdf2f2;border:1.5px dashed #fca5a5"></div>Released (click to keep)</div></div></div></nav><div class="page active" id="page-board"><div class="filter-bar" id="boardFilterBar" style="top:0"><span class="filter-label">FILTER</span><button class="fbtn active" onclick="setFilter('all',this,'board')">All</button><button class="fbtn" onclick="setFilter('QB',this,'board')">QB</button><button class="fbtn" onclick="setFilter('RB',this,'board')">RB</button><button class="fbtn" onclick="setFilter('WR',this,'board')">WR</button><button class="fbtn" onclick="setFilter('TE',this,'board')">TE</button><button class="fbtn" onclick="setFilter('top25',this,'board')">Top 25</button><button class="fbtn" onclick="setFilter('top50',this,'board')">Top 50</button><button class="fbtn" onclick="setFilter('top100',this,'board')">Top 100</button><button class="fbtn" onclick="setFilter('open',this,'board')">Open Picks</button><button class="fbtn" onclick="setFilter('keepers',this,'board')">Keeping</button><div class="divider-v"></div><button class="fbtn amber" id="predictBtn" onclick="togglePredict()">&#9733; Predict Keepers</button><button class="fbtn" id="clearBtn" onclick="reinstateAll()" style="display:none">&#10005; Reset All</button><div class="divider-v"></div><button class="fbtn green" onclick="exportKeepers()">Export</button> <button class="fbtn green" onclick="importKeepers()">Import</button> <input type="file" id="importFile" accept=".json,.csv" style="display:none" onchange="handleImport(event)"></div><div class="team-header-bar" id="teamHeaderBar"><div class="team-header-inner" id="teamHeaderInner"><div class="rnd-spacer"></div><div class="team-col-header" onclick="openRoster('BPE')"><div class="tch-name">Big Penix Energy</div><div class="tch-owner">Rahul</div><div class="tch-hint">View Roster &#8599;</div></div><div class="team-col-header" onclick="openRoster('TNT')"><div class="tch-name">Tennessee Tuxedos</div><div class="tch-owner">Dave</div><div class="tch-hint">View Roster &#8599;</div></div><div class="team-col-header" onclick="openRoster('AMS')"><div class="tch-name">Zal Werken Voor Vissen</div><div class="tch-owner">Alan</div><div class="tch-hint">View Roster &#8599;</div></div><div class="team-col-header" onclick="openRoster('MOON')"><div class="tch-name">Moon Mammoths</div><div class="tch-owner">Brett</div><div class="tch-hint">View Roster &#8599;</div></div><div class="team-col-header" onclick="openRoster('BBQ')"><div class="tch-name">BBQ Rice</div><div class="tch-owner">Nate</div><div class="tch-hint">View Roster &#8599;</div></div><div class="team-col-header" onclick="openRoster('SHAY')"><div class="tch-name">Skokie Shakes</div><div class="tch-owner">Marc</div><div class="tch-hint">View Roster &#8599;</div></div><div class="team-col-header" onclick="openRoster('PLZ')"><div class="tch-name">Choosing Beggars</div><div class="tch-owner">Sean</div><div class="tch-hint">View Roster &#8599;</div></div><div class="team-col-header" onclick="openRoster('KOBY')"><div class="tch-name">Riley Reid Option</div><div class="tch-owner">Koby</div><div class="tch-hint">View Roster &#8599;</div></div><div class="team-col-header" onclick="openRoster('FU')"><div class="tch-name">Son of Thor</div><div class="tch-owner">Colin</div><div class="tch-hint">View Roster &#8599;</div></div><div class="team-col-header" onclick="openRoster('SWET')"><div class="tch-name">The MoistureMakers</div><div class="tch-owner">Ronnie</div><div class="tch-hint">View Roster &#8599;</div></div><div class="team-col-header" onclick="openRoster('TMAL')"><div class="tch-name">Maloney Football Team</div><div class="tch-owner">Terri</div><div class="tch-hint">View Roster &#8599;</div></div><div class="team-col-header" onclick="openRoster('PRE')"><div class="tch-name">Hollywood Premieres</div><div class="tch-owner">Paul</div><div class="tch-hint">View Roster &#8599;</div></div></div></div><div class="scroll-container" id="scrollContainer"><table class="board-table" id="board"><tbody id="boardBody"></tbody></table></div></div><div class="page" id="page-roster"><div class="filter-bar" style="top:0"><span class="filter-label">POSITION</span><button class="fbtn active" onclick="setFilter('all',this,'roster')">All</button><button class="fbtn" onclick="setFilter('QB',this,'roster')">QB</button><button class="fbtn" onclick="setFilter('RB',this,'roster')">RB</button><button class="fbtn" onclick="setFilter('WR',this,'roster')">WR</button><button class="fbtn" onclick="setFilter('TE',this,'roster')">TE</button></div><div class="roster-page-inner"><div class="roster-header"><div><div class="roster-team-name" id="rosterTeamName">&#8212;</div><div class="roster-owner-label" id="rosterOwner">&#8212;</div></div></div><div id="rosterContent"></div></div></div><div class="page" id="page-fa"><div class="filter-bar" style="top:0"><span class="filter-label">POSITION</span><button class="fbtn active" onclick="setFilter('all',this,'fa')">All</button><button class="fbtn" onclick="setFilter('QB',this,'fa')">QB</button><button class="fbtn" onclick="setFilter('RB',this,'fa')">RB</button><button class="fbtn" onclick="setFilter('WR',this,'fa')">WR</button><button class="fbtn" onclick="setFilter('TE',this,'fa')">TE</button><button class="fbtn" onclick="setFilter('DST',this,'fa')">DST</button></div><div class="fa-stats" id="faStats"></div><div class="fa-table-wrap"><table class="fa-table"><thead><tr><th>ECR</th><th>Player</th><th>Pos</th><th>NFL Team</th><th>Best</th><th>Worst</th><th>Avg</th><th>Source</th></tr></thead><tbody id="faBody"></tbody></table></div></div><div class="modal-overlay" id="modalOverlay" onclick="closeModalOverlay(event)"><div class="modal"><h3 id="modalTitle"></h3><p id="modalMsg"></p><div class="modal-current" id="modalCurrent"></div><div class="modal-actions"><button class="modal-cancel" onclick="closeModal()">Cancel</button></div></div></div><script>const BOARD_DATA={"teams": ["BPE", "TNT", "AMS", "MOON", "BBQ", "SHAY", "PLZ", "KOBY", "FU", "SWET", "TMAL", "PRE"], "team_names": {"BPE": "Big Penix Energy", "TNT": "Tennessee Tuxedos", "AMS": "Zal Werken Voor Vissen", "MOON": "Moon Mammoths", "BBQ": "BBQ Rice", "SHAY": "Skokie Shakes", "PLZ": "Choosing Beggars", "KOBY": "Riley Reid Option", "FU": "Son of Thor", "SWET": "The MoistureMakers", "TMAL": "Maloney Football Team", "PRE": "Hollywood Premieres"}, "team_owners": {"BPE": "Rahul", "TNT": "Dave", "AMS": "Alan", "MOON": "Brett", "BBQ": "Nate", "SHAY": "Marc", "PLZ": "Sean", "KOBY": "Koby", "FU": "Colin", "SWET": "Ronnie", "TMAL": "Terri", "PRE": "Paul"}, "board": [[{"team": "BPE", "slots": [{"player": "Jayden Daniels", "status": "kept", "rank": 5, "pos": "QB5", "nfl_team": "WAS", "extra": false}]}, {"team": "TNT", "slots": [{"player": "Omarion Hampton", "status": "kept", "rank": 42, "pos": "RB9", "nfl_team": "LAC", "extra": false}, {"player": "Malik Nabers", "status": "kept", "rank": 27, "pos": "WR8", "nfl_team": "NYG", "extra": true}]}, {"team": "AMS", "slots": [{"player": "Justin Jefferson", "status": "kept", "rank": 21, "pos": "WR6", "nfl_team": "MIN", "extra": false}]}, {"team": "MOON", "slots": [{"player": null, "status": "open", "rank": 999, "pos": "?", "nfl_team": "", "extra": false}]}, {"team": "BBQ", "slots": [{"player": "Caleb Williams", "status": "kept", "rank": 14, "pos": "QB9", "nfl_team": "CHI", "extra": false}]}, {"team": "SHAY", "slots": [{"player": "Derrick Henry", "status": "kept", "rank": 60, "pos": "RB14", "nfl_team": "BAL", "extra": false}]}, {"team": "PLZ", "slots": [{"player": "Bijan Robinson", "status": "kept", "rank": 8, "pos": "RB1", "nfl_team": "ATL", "extra": false}]}, {"team": "KOBY", "slots": [{"player": "Lamar Jackson", "status": "kept", "rank": 2, "pos": "QB2", "nfl_team": "BAL", "extra": false}]}, {"team": "FU", "slots": [{"player": null, "status": "open", "rank": 27, "pos": "WR8", "nfl_team": "NYG", "extra": false}]}, {"team": "SWET", "slots": [{"player": "Christian McCaffrey", "status": "kept", "rank": 19, "pos": "RB3", "nfl_team": "SF", "extra": false}]}, {"team": "TMAL", "slots": [{"player": "Ashton Jeanty", "status": "kept", "rank": 33, "pos": "RB6", "nfl_team": "LV", "extra": false}]}, {"team": "PRE", "slots": [{"player": "Ja'Marr Chase", "status": "kept", "rank": 6, "pos": "WR1", "nfl_team": "CIN", "extra": false}]}], [{"team": "BPE", "slots": [{"player": null, "status": "open", "rank": 83, "pos": "RB23", "nfl_team": "CHI", "extra": false}]}, {"team": "TNT", "slots": [{"player": null, "status": "open", "rank": 999, "pos": "?", "nfl_team": "", "extra": false, "traded_pick": false}]}, {"team": "AMS", "slots": [{"player": "Alvin Kamara", "status": "kept", "rank": 148, "pos": "RB46", "nfl_team": "NO", "extra": false}]}, {"team": "MOON", "slots": [{"player": null, "status": "open", "rank": 43, "pos": "RB10", "nfl_team": "PHI", "extra": false}]}, {"team": "BBQ", "slots": [{"player": "Tyreek Hill", "status": "kept", "rank": 180, "pos": "WR70", "nfl_team": "FA", "extra": false}]}, {"team": "SHAY", "slots": [{"player": "Jahmyr Gibbs", "status": "kept", "rank": 13, "pos": "RB2", "nfl_team": "DET", "extra": false}]}, {"team": "PLZ", "slots": [{"player": "Jalen Hurts", "status": "kept", "rank": 7, "pos": "QB6", "nfl_team": "PHI", "extra": false}, {"player": "D'Andre Swift", "status": "kept", "rank": 83, "pos": "RB23", "nfl_team": "CHI", "extra": true}]}, {"team": "KOBY", "slots": [{"player": "Marvin Harrison Jr.", "status": "kept", "rank": 87, "pos": "WR31", "nfl_team": "ARI", "extra": false}]}, {"team": "FU", "slots": [{"player": "Matthew Golden", "status": "kept", "rank": 146, "pos": "WR55", "nfl_team": "GB", "extra": false}]}, {"team": "SWET", "slots": [{"player": "TreVeyon Henderson", "status": "kept", "rank": 79, "pos": "RB21", "nfl_team": "NE", "extra": false}]}, {"team": "TMAL", "slots": [{"player": "Jonathan Taylor", "status": "kept", "rank": 22, "pos": "RB4", "nfl_team": "IND", "extra": false}]}, {"team": "PRE", "slots": [{"player": "Patrick Mahomes", "status": "kept", "rank": 999, "pos": "?", "nfl_team": "", "extra": false}, {"player": "RJ Harvey", "status": "kept", "rank": 92, "pos": "RB25", "nfl_team": "DEN", "extra": true}]}], [{"team": "BPE", "slots": [{"player": "Rashee Rice", "status": "kept", "rank": 29, "pos": "WR10", "nfl_team": "KC", "extra": false}]}, {"team": "TNT", "slots": [{"player": "Cam Ward", "status": "kept", "rank": 70, "pos": "QB25", "nfl_team": "TEN", "extra": false}]}, {"team": "AMS", "slots": [{"player": "Emeka Egbuka", "status": "kept", "rank": 65, "pos": "WR24", "nfl_team": "TB", "extra": false}]}, {"team": "MOON", "slots": [{"player": "Trey McBride", "status": "kept", "rank": 31, "pos": "TE1", "nfl_team": "ARI", "extra": false}]}, {"team": "BBQ", "slots": [{"player": "J.J. McCarthy", "status": "kept", "rank": 266, "pos": "QB37", "nfl_team": "MIN", "extra": false}]}, {"team": "SHAY", "slots": [{"player": "DK Metcalf", "status": "kept", "rank": 91, "pos": "WR34", "nfl_team": "PIT", "extra": false}]}, {"team": "PLZ", "slots": [{"player": "Tetairoa McMillan", "status": "kept", "rank": 44, "pos": "WR14", "nfl_team": "CAR", "extra": false}]}, {"team": "KOBY", "slots": [{"player": "Davante Adams", "status": "kept", "rank": 63, "pos": "WR22", "nfl_team": "LAR", "extra": false}]}, {"team": "FU", "slots": [{"player": "Kaleb Johnson", "status": "kept", "rank": 212, "pos": "RB68", "nfl_team": "PIT", "extra": false}]}, {"team": "SWET", "slots": [{"player": "CeeDee Lamb", "status": "kept", "rank": 18, "pos": "WR5", "nfl_team": "DAL", "extra": false}]}, {"team": "TMAL", "slots": [{"player": "Justin Herbert", "status": "kept", "rank": 10, "pos": "QB7", "nfl_team": "LAC", "extra": false}]}, {"team": "PRE", "slots": [{"player": "Joe Burrow", "status": "kept", "rank": 4, "pos": "QB4", "nfl_team": "CIN", "extra": false}]}], [{"team": "BPE", "slots": [{"player": "David Montgomery", "status": "kept", "rank": 82, "pos": "RB22", "nfl_team": "HOU", "extra": false}]}, {"team": "TNT", "slots": [{"player": "Travis Hunter", "status": "kept", "rank": 161, "pos": "WR60", "nfl_team": "JAC", "extra": false}]}, {"team": "AMS", "slots": [{"player": "James Conner", "status": "kept", "rank": 151, "pos": "RB48", "nfl_team": "ARI", "extra": false}]}, {"team": "MOON", "slots": [{"player": "Tua Tagovailoa", "status": "kept", "rank": 191, "pos": "QB33", "nfl_team": "ATL", "extra": false}]}, {"team": "BBQ", "slots": [{"player": "Drake Maye", "status": "kept", "rank": 3, "pos": "QB3", "nfl_team": "NE", "extra": false}]}, {"team": "SHAY", "slots": [{"player": "Breece Hall", "status": "kept", "rank": 62, "pos": "RB15", "nfl_team": "NYJ", "extra": false}]}, {"team": "PLZ", "slots": [{"player": "Chris Godwin Jr.", "status": "kept", "rank": 89, "pos": "WR33", "nfl_team": "TB", "extra": false}]}, {"team": "KOBY", "slots": [{"player": "Aaron Jones Sr.", "status": "kept", "rank": 115, "pos": "RB34", "nfl_team": "MIN", "extra": false}]}, {"team": "FU", "slots": [{"player": "A.J. Brown", "status": "kept", "rank": 36, "pos": "WR13", "nfl_team": "PHI", "extra": false}]}, {"team": "SWET", "slots": [{"player": "Dak Prescott", "status": "kept", "rank": 16, "pos": "QB11", "nfl_team": "DAL", "extra": false}]}, {"team": "TMAL", "slots": [{"player": "DJ Moore", "status": "kept", "rank": 76, "pos": "WR27", "nfl_team": "BUF", "extra": false}]}, {"team": "PRE", "slots": [{"player": "Jaylen Waddle", "status": "kept", "rank": 59, "pos": "WR21", "nfl_team": "DEN", "extra": false}]}], [{"team": "BPE", "slots": [{"player": "Bryce Young", "status": "kept", "rank": 67, "pos": "QB24", "nfl_team": "CAR", "extra": false}]}, {"team": "TNT", "slots": [{"player": "Brock Purdy", "status": "kept", "rank": 20, "pos": "QB12", "nfl_team": "SF", "extra": false}]}, {"team": "AMS", "slots": [{"player": "Terry McLaurin", "status": "kept", "rank": 64, "pos": "WR23", "nfl_team": "WAS", "extra": false}]}, {"team": "MOON", "slots": [{"player": "Travis Kelce", "status": "kept", "rank": 123, "pos": "TE12", "nfl_team": "KC", "extra": false}]}, {"team": "BBQ", "slots": [{"player": "Drake London", "status": "kept", "rank": 23, "pos": "WR7", "nfl_team": "ATL", "extra": false}]}, {"team": "SHAY", "slots": [{"player": "Stefon Diggs", "status": "kept", "rank": 158, "pos": "WR59", "nfl_team": "FA", "extra": false}]}, {"team": "PLZ", "slots": [{"player": "Rome Odunze", "status": "kept", "rank": 81, "pos": "WR29", "nfl_team": "CHI", "extra": false}]}, {"team": "KOBY", "slots": [{"player": "Josh Jacobs", "status": "kept", "rank": 52, "pos": "RB12", "nfl_team": "GB", "extra": false}]}, {"team": "FU", "slots": [{"player": "Matthew Stafford", "status": "kept", "rank": 25, "pos": "QB14", "nfl_team": "LAR", "extra": false}]}, {"team": "SWET", "slots": [{"player": "Javonte Williams", "status": "kept", "rank": 69, "pos": "RB18", "nfl_team": "DAL", "extra": false}]}, {"team": "TMAL", "slots": [{"player": "Kyler Murray", "status": "kept", "rank": 40, "pos": "QB17", "nfl_team": "MIN", "extra": false}]}, {"team": "PRE", "slots": [{"player": "Jacory Croskey-Merritt", "status": "kept", "rank": 132, "pos": "RB39", "nfl_team": "WAS", "extra": false}]}], [{"team": "BPE", "slots": [{"player": "Geno Smith", "status": "kept", "rank": 124, "pos": "QB30", "nfl_team": "NYJ", "extra": false}]}, {"team": "TNT", "slots": [{"player": "Brian Thomas Jr.", "status": "kept", "rank": 106, "pos": "WR40", "nfl_team": "JAC", "extra": false}]}, {"team": "AMS", "slots": [{"player": "Michael Pittman Jr.", "status": "kept", "rank": 107, "pos": "WR41", "nfl_team": "PIT", "extra": false}]}, {"team": "MOON", "slots": [{"player": "Joe Mixon", "status": "kept", "rank": 264, "pos": "RB86", "nfl_team": "FA", "extra": false}]}, {"team": "BBQ", "slots": [{"player": "Najee Harris", "status": "kept", "rank": 233, "pos": "RB72", "nfl_team": "LAC", "extra": false}]}, {"team": "SHAY", "slots": [{"player": "Xavier Worthy", "status": "kept", "rank": 135, "pos": "WR52", "nfl_team": "KC", "extra": false}]}, {"team": "PLZ", "slots": [{"player": "C.J. Stroud", "status": "kept", "rank": 58, "pos": "QB22", "nfl_team": "HOU", "extra": false}]}, {"team": "KOBY", "slots": [{"player": "Aaron Rodgers", "status": "kept", "rank": 184, "pos": "QB32", "nfl_team": "FA", "extra": false}]}, {"team": "FU", "slots": [{"player": "Amon-Ra St. Brown", "status": "kept", "rank": 17, "pos": "WR4", "nfl_team": "DET", "extra": false}]}, {"team": "SWET", "slots": [{"player": "Mike Evans", "status": "kept", "rank": 71, "pos": "WR25", "nfl_team": "SF", "extra": false}]}, {"team": "TMAL", "slots": [{"player": "Tee Higgins", "status": "kept", "rank": 50, "pos": "WR16", "nfl_team": "CIN", "extra": false}]}, {"team": "PRE", "slots": [{"player": "Zay Flowers", "status": "kept", "rank": 56, "pos": "WR19", "nfl_team": "BAL", "extra": false}]}], [{"team": "BPE", "slots": [{"player": "Jordan Addison", "status": "kept", "rank": 114, "pos": "WR45", "nfl_team": "MIN", "extra": false}]}, {"team": "TNT", "slots": [{"player": "Trevor Lawrence", "status": "kept", "rank": 15, "pos": "QB10", "nfl_team": "JAC", "extra": false}]}, {"team": "AMS", "slots": [{"player": "Bo Nix", "status": "kept", "rank": 26, "pos": "QB15", "nfl_team": "DEN", "extra": false}]}, {"team": "MOON", "slots": [{"player": "Ladd McConkey", "status": "kept", "rank": 54, "pos": "WR18", "nfl_team": "LAC", "extra": false}]}, {"team": "BBQ", "slots": [{"player": "Quinshon Judkins", "status": "kept", "rank": 84, "pos": "RB24", "nfl_team": "CLE", "extra": false}]}, {"team": "SHAY", "slots": [{"player": "Daniel Jones", "status": "kept", "rank": 75, "pos": "QB26", "nfl_team": "IND", "extra": false}]}, {"team": "PLZ", "slots": [{"player": "Jayden Higgins", "status": "kept", "rank": 131, "pos": "WR50", "nfl_team": "HOU", "extra": false}]}, {"team": "KOBY", "slots": [{"player": "Travis Etienne Jr.", "status": "kept", "rank": 66, "pos": "RB16", "nfl_team": "NO", "extra": false}]}, {"team": "FU", "slots": [{"player": "Sam Darnold", "status": "kept", "rank": 61, "pos": "QB23", "nfl_team": "SEA", "extra": false}]}, {"team": "SWET", "slots": [{"player": "Deebo Samuel", "status": "kept", "rank": 999, "pos": "?", "nfl_team": "", "extra": false}]}, {"team": "TMAL", "slots": [{"player": "Cooper Kupp", "status": "kept", "rank": 234, "pos": "WR96", "nfl_team": "SEA", "extra": false}]}, {"team": "PRE", "slots": [{"player": "Jauan Jennings", "status": "kept", "rank": 164, "pos": "WR61", "nfl_team": "MIN", "extra": false}]}], [{"team": "BPE", "slots": [{"player": "Austin Ekeler", "status": "kept", "rank": 304, "pos": "RB105", "nfl_team": "FA", "extra": false}]}, {"team": "TNT", "slots": [{"player": "Braelon Allen", "status": "kept", "rank": 160, "pos": "RB52", "nfl_team": "NYJ", "extra": false}, {"player": "Tony Pollard", "status": "kept", "rank": 110, "pos": "RB32", "nfl_team": "TEN", "extra": false}]}, {"team": "AMS", "slots": [{"player": null, "status": "open", "rank": 154, "pos": "TE18", "nfl_team": "BAL", "extra": false}]}, {"team": "MOON", "slots": [{"player": "Isiah Pacheco", "status": "kept", "rank": 155, "pos": "RB49", "nfl_team": "DET", "extra": false}, {"player": "Mark Andrews", "status": "kept", "rank": 154, "pos": "TE18", "nfl_team": "BAL", "extra": true}]}, {"team": "BBQ", "slots": [{"player": "Cam Skattebo", "status": "kept", "rank": 77, "pos": "RB20", "nfl_team": "NYG", "extra": false}]}, {"team": "SHAY", "slots": [{"player": "Keon Coleman", "status": "kept", "rank": 235, "pos": "WR97", "nfl_team": "BUF", "extra": false}]}, {"team": "PLZ", "slots": [{"player": "Kenneth Walker III", "status": "kept", "rank": 49, "pos": "RB11", "nfl_team": "KC", "extra": false}]}, {"team": "KOBY", "slots": [{"player": "Christian Watson", "status": "kept", "rank": 78, "pos": "WR28", "nfl_team": "GB", "extra": false}]}, {"team": "FU", "slots": [{"player": "Jaxson Dart", "status": "kept", "rank": 11, "pos": "QB8", "nfl_team": "NYG", "extra": false}]}, {"team": "SWET", "slots": [{"player": "Cedric Tillman", "status": "kept", "rank": 285, "pos": "WR112", "nfl_team": "CLE", "extra": false}]}, {"team": "TMAL", "slots": [{"player": "J.K. Dobbins", "status": "kept", "rank": 127, "pos": "RB37", "nfl_team": "DEN", "extra": false}]}, {"team": "PRE", "slots": [{"player": null, "status": "open", "rank": 999, "pos": "?", "nfl_team": "", "extra": false, "traded_pick": false}]}], [{"team": "BPE", "slots": [{"player": "Adam Thielen", "status": "dropped", "rank": 999, "pos": "?", "nfl_team": "", "extra": false}]}, {"team": "TNT", "slots": [{"player": null, "status": "open", "rank": 211, "pos": "RB67", "nfl_team": "ARI", "extra": false}]}, {"team": "AMS", "slots": [{"player": "Rhamondre Stevenson", "status": "kept", "rank": 108, "pos": "RB31", "nfl_team": "NE", "extra": false}]}, {"team": "MOON", "slots": [{"player": "Keenan Allen", "status": "kept", "rank": 247, "pos": "WR104", "nfl_team": "LAC", "extra": false}]}, {"team": "BBQ", "slots": [{"player": "Zach Charbonnet", "status": "kept", "rank": 138, "pos": "RB41", "nfl_team": "SEA", "extra": false}]}, {"team": "SHAY", "slots": [{"player": "Garrett Wilson", "status": "kept", "rank": 47, "pos": "WR15", "nfl_team": "NYJ", "extra": false}]}, {"team": "PLZ", "slots": [{"player": "George Pickens", "status": "kept", "rank": 32, "pos": "WR11", "nfl_team": "DAL", "extra": false}]}, {"team": "KOBY", "slots": [{"player": "Jaxon Smith-Njigba", "status": "kept", "rank": 12, "pos": "WR3", "nfl_team": "SEA", "extra": false}]}, {"team": "FU", "slots": [{"player": "Tyjae Spears", "status": "kept", "rank": 145, "pos": "RB45", "nfl_team": "TEN", "extra": false}, {"player": "Trey Benson", "status": "kept", "rank": 211, "pos": "RB67", "nfl_team": "ARI", "extra": true}]}, {"team": "SWET", "slots": [{"player": "Chris Olave", "status": "kept", "rank": 35, "pos": "WR12", "nfl_team": "NO", "extra": false}]}, {"team": "TMAL", "slots": [{"player": "Brock Bowers", "status": "kept", "rank": 37, "pos": "TE2", "nfl_team": "LV", "extra": false}]}, {"team": "PRE", "slots": [{"player": "Justin Fields", "status": "dropped", "rank": 297, "pos": "QB39", "nfl_team": "KC", "extra": false}]}], [{"team": "BPE", "slots": [{"player": "Khalil Shakir", "status": "kept", "rank": 126, "pos": "WR48", "nfl_team": "BUF", "extra": false}]}, {"team": "TNT", "slots": [{"player": "Jaydon Blue", "status": "kept", "rank": 254, "pos": "RB78", "nfl_team": "DAL", "extra": false}]}, {"team": "AMS", "slots": [{"player": "Jaylen Warren", "status": "kept", "rank": 94, "pos": "RB26", "nfl_team": "PIT", "extra": false}]}, {"team": "MOON", "slots": [{"player": "George Kittle", "status": "kept", "rank": 133, "pos": "TE14", "nfl_team": "SF", "extra": false}]}, {"team": "BBQ", "slots": [{"player": "Hollywood Brown", "status": "kept", "rank": 268, "pos": "WR108", "nfl_team": "PHI", "extra": false}]}, {"team": "SHAY", "slots": [{"player": "Rashod Bateman", "status": "kept", "rank": 218, "pos": "WR85", "nfl_team": "BAL", "extra": false}]}, {"team": "PLZ", "slots": [{"player": "Dillon Gabriel", "status": "kept", "rank": 999, "pos": "?", "nfl_team": "", "extra": false}]}, {"team": "KOBY", "slots": [{"player": "DeVonta Smith", "status": "kept", "rank": 51, "pos": "WR17", "nfl_team": "PHI", "extra": false}]}, {"team": "FU", "slots": [{"player": "Luther Burden III", "status": "kept", "rank": 57, "pos": "WR20", "nfl_team": "CHI", "extra": false}]}, {"team": "SWET", "slots": [{"player": "Rachaad White", "status": "kept", "rank": 130, "pos": "RB38", "nfl_team": "WAS", "extra": false}]}, {"team": "TMAL", "slots": [{"player": "Darnell Mooney", "status": "kept", "rank": 195, "pos": "WR76", "nfl_team": "NYG", "extra": false}]}, {"team": "PRE", "slots": [{"player": "James Cook III", "status": "kept", "rank": 34, "pos": "RB7", "nfl_team": "BUF", "extra": false}]}], [{"team": "BPE", "slots": [{"player": "Courtland Sutton", "status": "kept", "rank": 86, "pos": "WR30", "nfl_team": "DEN", "extra": false}]}, {"team": "TNT", "slots": [{"player": "Nico Collins", "status": "kept", "rank": 28, "pos": "WR9", "nfl_team": "HOU", "extra": false}, {"player": "Tyler Warren", "status": "kept", "rank": 74, "pos": "TE4", "nfl_team": "IND", "extra": true}]}, {"team": "AMS", "slots": [{"player": "Michael Penix Jr.", "status": "kept", "rank": 122, "pos": "QB29", "nfl_team": "ATL", "extra": false}]}, {"team": "MOON", "slots": [{"player": "Jerry Jeudy", "status": "kept", "rank": 157, "pos": "WR58", "nfl_team": "CLE", "extra": false}]}, {"team": "BBQ", "slots": [{"player": null, "status": "open", "rank": 197, "pos": "RB64", "nfl_team": "MIA", "extra": false}]}, {"team": "SHAY", "slots": [{"player": "Ray Davis", "status": "kept", "rank": 190, "pos": "RB62", "nfl_team": "BUF", "extra": false}]}, {"team": "PLZ", "slots": [{"player": "Tyrone Tracy Jr.", "status": "kept", "rank": 142, "pos": "RB44", "nfl_team": "NYG", "extra": false}]}, {"team": "KOBY", "slots": [{"player": "Brandon Aiyuk", "status": "kept", "rank": 169, "pos": "WR64", "nfl_team": "SF", "extra": false}]}, {"team": "FU", "slots": [{"player": "Roschon Johnson", "status": "dropped", "rank": 366, "pos": "RB115", "nfl_team": "CHI", "extra": false}]}, {"team": "SWET", "slots": [{"player": "Bhayshul Tuten", "status": "kept", "rank": 95, "pos": "RB27", "nfl_team": "JAC", "extra": false}]}, {"team": "TMAL", "slots": [{"player": "De'Von Achane", "status": "kept", "rank": 30, "pos": "RB5", "nfl_team": "MIA", "extra": false}]}, {"team": "PRE", "slots": [{"player": null, "status": "open", "rank": 999, "pos": "?", "nfl_team": "", "extra": false, "traded_pick": false}, {"player": "Jaylen Wright", "status": "kept", "rank": 197, "pos": "RB64", "nfl_team": "MIA", "extra": true}]}], [{"team": "BPE", "slots": [{"player": "Colston Loveland", "status": "acquired", "rank": 55, "pos": "TE3", "nfl_team": "CHI", "extra": true}]}, {"team": "TNT", "slots": [{"player": "DeMario Douglas", "status": "dropped", "rank": 314, "pos": "WR126", "nfl_team": "NE", "extra": false}]}, {"team": "AMS", "slots": [{"player": "Tucker Kraft", "status": "kept", "rank": 85, "pos": "TE5", "nfl_team": "GB", "extra": false}]}, {"team": "MOON", "slots": [{"player": "Xavier Legette", "status": "kept", "rank": 248, "pos": "WR105", "nfl_team": "CAR", "extra": false}]}, {"team": "BBQ", "slots": [{"player": "Nick Chubb", "status": "kept", "rank": 299, "pos": "RB103", "nfl_team": "FA", "extra": false}]}, {"team": "SHAY", "slots": [{"player": "Baker Mayfield", "status": "kept", "rank": 48, "pos": "QB21", "nfl_team": "TB", "extra": false}]}, {"team": "PLZ", "slots": [{"player": null, "status": "no_pick", "rank": 999, "pos": "?", "nfl_team": "", "extra": false, "note": "Traded to Big Penix Energy", "traded_pick": true}]}, {"team": "KOBY", "slots": [{"player": "Rico Dowdle", "status": "kept", "rank": 105, "pos": "RB30", "nfl_team": "PIT", "extra": false}]}, {"team": "FU", "slots": [{"player": "Tyler Allgeier", "status": "kept", "rank": 136, "pos": "RB40", "nfl_team": "ARI", "extra": false}]}, {"team": "SWET", "slots": [{"player": "Jack Bech", "status": "dropped", "rank": 241, "pos": "WR100", "nfl_team": "LV", "extra": false}]}, {"team": "TMAL", "slots": [{"player": "Brian Robinson Jr.", "status": "kept", "rank": 171, "pos": "RB55", "nfl_team": "ATL", "extra": false}]}, {"team": "PRE", "slots": [{"player": "Dylan Sampson", "status": "kept", "rank": 149, "pos": "RB47", "nfl_team": "CLE", "extra": false}]}], [{"team": "BPE", "slots": [{"player": "Kyle Pitts Sr.", "status": "kept", "rank": 101, "pos": "TE7", "nfl_team": "ATL", "extra": false}]}, {"team": "TNT", "slots": [{"player": "Woody Marks", "status": "kept", "rank": 139, "pos": "RB42", "nfl_team": "HOU", "extra": false}]}, {"team": "AMS", "slots": [{"player": "Romeo Doubs", "status": "kept", "rank": 134, "pos": "WR51", "nfl_team": "NE", "extra": false}]}, {"team": "MOON", "slots": [{"player": "Shedeur Sanders", "status": "kept", "rank": 147, "pos": "QB31", "nfl_team": "CLE", "extra": false}]}, {"team": "BBQ", "slots": [{"player": "Kyle Williams", "status": "dropped", "rank": 230, "pos": "WR93", "nfl_team": "NE", "extra": false}]}, {"team": "SHAY", "slots": [{"player": "Jakobi Meyers", "status": "kept", "rank": 100, "pos": "WR37", "nfl_team": "JAC", "extra": false}]}, {"team": "PLZ", "slots": [{"player": "Ollie Gordon II", "status": "kept", "rank": 217, "pos": "RB70", "nfl_team": "MIA", "extra": false}]}, {"team": "KOBY", "slots": [{"player": "Russell Wilson", "status": "kept", "rank": 999, "pos": "?", "nfl_team": "", "extra": false}]}, {"team": "FU", "slots": [{"player": "Bucky Irving", "status": "kept", "rank": 73, "pos": "RB19", "nfl_team": "TB", "extra": false}]}, {"team": "SWET", "slots": [{"player": "Jake Ferguson", "status": "kept", "rank": 117, "pos": "TE9", "nfl_team": "DAL", "extra": false}]}, {"team": "TMAL", "slots": [{"player": "Jared Goff", "status": "kept", "rank": 38, "pos": "QB16", "nfl_team": "DET", "extra": false}]}, {"team": "PRE", "slots": [{"player": "Jameson Williams", "status": "kept", "rank": 72, "pos": "WR26", "nfl_team": "DET", "extra": false}]}], [{"team": "BPE", "slots": [{"player": "Tyler Shough", "status": "kept", "rank": 46, "pos": "QB20", "nfl_team": "NO", "extra": false}]}, {"team": "TNT", "slots": [{"player": "Adonai Mitchell", "status": "kept", "rank": 168, "pos": "WR63", "nfl_team": "NYJ", "extra": false}]}, {"team": "AMS", "slots": [{"player": "Justice Hill", "status": "kept", "rank": 258, "pos": "RB80", "nfl_team": "BAL", "extra": false}]}, {"team": "MOON", "slots": [{"player": "Texans D/ST", "status": "dropped", "rank": 999, "pos": "DST", "nfl_team": "", "extra": false}]}, {"team": "BBQ", "slots": [{"player": "T.J. Hockenson", "status": "kept", "rank": 179, "pos": "TE22", "nfl_team": "MIN", "extra": false}]}, {"team": "SHAY", "slots": [{"player": "Isaac Guerendo", "status": "dropped", "rank": 267, "pos": "RB88", "nfl_team": "SF", "extra": false}]}, {"team": "PLZ", "slots": [{"player": "David Njoku", "status": "kept", "rank": 208, "pos": "TE27", "nfl_team": "LAC", "extra": false}]}, {"team": "KOBY", "slots": [{"player": "Ricky Pearsall", "status": "kept", "rank": 111, "pos": "WR43", "nfl_team": "SF", "extra": false}]}, {"team": "FU", "slots": [{"player": "MarShawn Lloyd", "status": "kept", "rank": 271, "pos": "RB90", "nfl_team": "GB", "extra": false}]}, {"team": "SWET", "slots": [{"player": "Chase Brown", "status": "kept", "rank": 39, "pos": "RB8", "nfl_team": "CIN", "extra": false}]}, {"team": "TMAL", "slots": [{"player": "Tre' Harris", "status": "dropped", "rank": 177, "pos": "WR68", "nfl_team": "LAC", "extra": false}]}, {"team": "PRE", "slots": [{"player": "Kyle Monangai", "status": "kept", "rank": 112, "pos": "RB33", "nfl_team": "CHI", "extra": false}]}], [{"team": "BPE", "slots": [{"player": "Ravens D/ST", "status": "dropped", "rank": 999, "pos": "DST", "nfl_team": "", "extra": false}]}, {"team": "TNT", "slots": [{"player": "Kyren Williams", "status": "kept", "rank": 68, "pos": "RB17", "nfl_team": "LAR", "extra": false}]}, {"team": "AMS", "slots": [{"player": "Christian Kirk", "status": "kept", "rank": 242, "pos": "WR101", "nfl_team": "SF", "extra": false}]}, {"team": "MOON", "slots": [{"player": "Seahawks D/ST", "status": "dropped", "rank": 999, "pos": "DST", "nfl_team": "", "extra": false}]}, {"team": "BBQ", "slots": [{"player": "Jayden Reed", "status": "kept", "rank": 121, "pos": "WR47", "nfl_team": "GB", "extra": false}]}, {"team": "SHAY", "slots": [{"player": "Jalen McMillan", "status": "kept", "rank": 172, "pos": "WR66", "nfl_team": "TB", "extra": false}]}, {"team": "PLZ", "slots": [{"player": "Jalen Milroe", "status": "dropped", "rank": 999, "pos": "?", "nfl_team": "", "extra": false}]}, {"team": "KOBY", "slots": [{"player": "Broncos D/ST", "status": "dropped", "rank": 999, "pos": "DST", "nfl_team": "", "extra": false}]}, {"team": "FU", "slots": [{"player": "Keaton Mitchell", "status": "kept", "rank": 162, "pos": "RB53", "nfl_team": "LAC", "extra": false}]}, {"team": "SWET", "slots": [{"player": "Brashard Smith", "status": "kept", "rank": 246, "pos": "RB75", "nfl_team": "KC", "extra": false}]}, {"team": "TMAL", "slots": [{"player": "Dallas Goedert", "status": "kept", "rank": 137, "pos": "TE15", "nfl_team": "PHI", "extra": false}]}, {"team": "PRE", "slots": [{"player": "Marvin Mims Jr.", "status": "dropped", "rank": 231, "pos": "WR94", "nfl_team": "DEN", "extra": false}]}], [{"team": "BPE", "slots": [{"player": "Kareem Hunt", "status": "kept", "rank": 290, "pos": "RB100", "nfl_team": "FA", "extra": false}]}, {"team": "TNT", "slots": [{"player": null, "status": "no_pick", "rank": 999, "pos": "?", "nfl_team": "", "extra": false, "note": "Traded to Choosing Beggars", "traded_pick": true}]}, {"team": "AMS", "slots": [{"player": "Tank Bigsby", "status": "kept", "rank": 176, "pos": "RB57", "nfl_team": "PHI", "extra": false}]}, {"team": "MOON", "slots": [{"player": "Tyler Lockett", "status": "dropped", "rank": 999, "pos": "?", "nfl_team": "", "extra": false}]}, {"team": "BBQ", "slots": [{"player": "Anthony Richardson Sr.", "status": "dropped", "rank": 309, "pos": "QB40", "nfl_team": "IND", "extra": false}]}, {"team": "SHAY", "slots": [{"player": "Eagles D/ST", "status": "dropped", "rank": 999, "pos": "DST", "nfl_team": "", "extra": false}]}, {"team": "PLZ", "slots": [{"player": "Kendre Miller", "status": "acquired", "rank": 227, "pos": "RB71", "nfl_team": "NO", "extra": true}]}, {"team": "KOBY", "slots": [{"player": "Chuba Hubbard", "status": "kept", "rank": 98, "pos": "RB28", "nfl_team": "CAR", "extra": false}]}, {"team": "FU", "slots": [{"player": "Malik Willis", "status": "kept", "rank": 45, "pos": "QB19", "nfl_team": "MIA", "extra": false}]}, {"team": "SWET", "slots": [{"player": "Steelers D/ST", "status": "dropped", "rank": 999, "pos": "DST", "nfl_team": "", "extra": false}]}, {"team": "TMAL", "slots": [{"player": "Blake Corum", "status": "kept", "rank": 125, "pos": "RB36", "nfl_team": "LAR", "extra": false}]}, {"team": "PRE", "slots": [{"player": "Chris Rodriguez Jr.", "status": "kept", "rank": 156, "pos": "RB50", "nfl_team": "JAC", "extra": false}]}], [{"team": "BPE", "slots": [{"player": "Kirk Cousins", "status": "kept", "rank": 249, "pos": "QB35", "nfl_team": "LV", "extra": false}]}, {"team": "TNT", "slots": [{"player": "Elic Ayomanor", "status": "kept", "rank": 205, "pos": "WR81", "nfl_team": "TEN", "extra": false}]}, {"team": "AMS", "slots": [{"player": "Troy Franklin", "status": "kept", "rank": 178, "pos": "WR69", "nfl_team": "DEN", "extra": false}]}, {"team": "MOON", "slots": [{"player": "Darius Slayton", "status": "kept", "rank": 250, "pos": "WR106", "nfl_team": "NYG", "extra": false}]}, {"team": "BBQ", "slots": [{"player": "Sam LaPorta", "status": "kept", "rank": 104, "pos": "TE8", "nfl_team": "DET", "extra": false}]}, {"team": "SHAY", "slots": [{"player": "Tahj Brooks", "status": "dropped", "rank": 278, "pos": "RB94", "nfl_team": "CIN", "extra": false}]}, {"team": "PLZ", "slots": [{"player": "DJ Giddens", "status": "kept", "rank": 261, "pos": "RB83", "nfl_team": "IND", "extra": false}]}, {"team": "KOBY", "slots": [{"player": "Jarquez Hunter", "status": "dropped", "rank": 280, "pos": "RB96", "nfl_team": "LAR", "extra": false}]}, {"team": "FU", "slots": [{"player": "Tory Horton", "status": "kept", "rank": 238, "pos": "WR99", "nfl_team": "SEA", "extra": false}]}, {"team": "SWET", "slots": [{"player": "Spencer Rattler", "status": "dropped", "rank": 999, "pos": "?", "nfl_team": "", "extra": false}]}, {"team": "TMAL", "slots": [{"player": "Miles Sanders", "status": "dropped", "rank": 999, "pos": "?", "nfl_team": "", "extra": false}]}, {"team": "PRE", "slots": [{"player": "Jordan Mason", "status": "kept", "rank": 141, "pos": "RB43", "nfl_team": "MIN", "extra": false}]}], [{"team": "BPE", "slots": [{"player": "Pat Bryant", "status": "dropped", "rank": 192, "pos": "WR74", "nfl_team": "DEN", "extra": false}]}, {"team": "TNT", "slots": [{"player": null, "status": "open", "rank": 999, "pos": "?", "nfl_team": "", "extra": false, "traded_pick": false}]}, {"team": "AMS", "slots": [{"player": "Giants D/ST", "status": "dropped", "rank": 999, "pos": "DST", "nfl_team": "", "extra": false}]}, {"team": "MOON", "slots": [{"player": "Kenneth Gainwell", "status": "kept", "rank": 118, "pos": "RB35", "nfl_team": "TB", "extra": false}]}, {"team": "BBQ", "slots": [{"player": null, "status": "open", "rank": 120, "pos": "TE11", "nfl_team": "BUF", "extra": false}]}, {"team": "SHAY", "slots": [{"player": "Joe Flacco", "status": "kept", "rank": 347, "pos": "QB43", "nfl_team": "CIN", "extra": false}]}, {"team": "PLZ", "slots": [{"player": "Jerome Ford", "status": "dropped", "rank": 256, "pos": "RB79", "nfl_team": "WAS", "extra": false}]}, {"team": "KOBY", "slots": [{"player": "Evan Engram", "status": "kept", "rank": 220, "pos": "TE30", "nfl_team": "DEN", "extra": false}]}, {"team": "FU", "slots": [{"player": "Ty Johnson", "status": "dropped", "rank": 252, "pos": "RB77", "nfl_team": "BUF", "extra": false}, {"player": "Dalton Kincaid", "status": "kept", "rank": 120, "pos": "TE11", "nfl_team": "BUF", "extra": true}]}, {"team": "SWET", "slots": [{"player": "Lions D/ST", "status": "dropped", "rank": 999, "pos": "DST", "nfl_team": "", "extra": false}]}, {"team": "TMAL", "slots": [{"player": "Michael Wilson", "status": "kept", "rank": 97, "pos": "WR36", "nfl_team": "ARI", "extra": false}]}, {"team": "PRE", "slots": [{"player": "Joshua Palmer", "status": "dropped", "rank": 307, "pos": "WR121", "nfl_team": "BUF", "extra": false}, {"player": "Devin Neal", "status": "kept", "rank": 207, "pos": "RB66", "nfl_team": "NO", "extra": true}]}], [{"team": "BPE", "slots": [{"player": null, "status": "no_pick", "rank": 999, "pos": "?", "nfl_team": "", "extra": false, "note": "Traded to Choosing Beggars", "traded_pick": true}]}, {"team": "TNT", "slots": [{"player": "Trevor Etienne", "status": "acquired", "rank": 279, "pos": "RB95", "nfl_team": "CAR", "extra": true}]}, {"team": "AMS", "slots": [{"player": "Chris Brooks", "status": "kept", "rank": 260, "pos": "RB82", "nfl_team": "GB", "extra": false}]}, {"team": "MOON", "slots": [{"player": "Ray-Ray McCloud III", "status": "dropped", "rank": 999, "pos": "?", "nfl_team": "", "extra": false}]}, {"team": "BBQ", "slots": [{"player": "Cade Otton", "status": "dropped", "rank": 213, "pos": "TE28", "nfl_team": "TB", "extra": false}]}, {"team": "SHAY", "slots": [{"player": "Josh Downs", "status": "kept", "rank": 116, "pos": "WR46", "nfl_team": "IND", "extra": false}]}, {"team": "PLZ", "slots": [{"player": "Cardinals D/ST", "status": "acquired", "rank": 999, "pos": "DST", "nfl_team": "", "extra": true}]}, {"team": "KOBY", "slots": [{"player": "Tai Felton", "status": "dropped", "rank": 341, "pos": "WR138", "nfl_team": "MIN", "extra": false}]}, {"team": "FU", "slots": [{"player": "Puka Nacua", "status": "kept", "rank": 9, "pos": "WR2", "nfl_team": "LAR", "extra": false}]}, {"team": "SWET", "slots": [{"player": "Jordan Love", "status": "kept", "rank": 41, "pos": "QB18", "nfl_team": "GB", "extra": false}]}, {"team": "TMAL", "slots": [{"player": "Patriots D/ST", "status": "dropped", "rank": 999, "pos": "DST", "nfl_team": "", "extra": false}]}, {"team": "PRE", "slots": [{"player": "Jalen Coker", "status": "kept", "rank": 140, "pos": "WR53", "nfl_team": "CAR", "extra": false}]}], [{"team": "BPE", "slots": [{"player": "Van Jefferson", "status": "dropped", "rank": 999, "pos": "?", "nfl_team": "", "extra": false}, {"player": "Calvin Ridley", "status": "kept", "rank": 193, "pos": "WR75", "nfl_team": "TEN", "extra": true}]}, {"team": "TNT", "slots": [{"player": "Isaac TeSlaa", "status": "kept", "rank": 201, "pos": "WR79", "nfl_team": "DET", "extra": false}]}, {"team": "AMS", "slots": [{"player": "Quentin Johnston", "status": "kept", "rank": 128, "pos": "WR49", "nfl_team": "LAC", "extra": false}]}, {"team": "MOON", "slots": [{"player": "Brandin Cooks", "status": "kept", "rank": 379, "pos": "WR152", "nfl_team": "FA", "extra": false}]}, {"team": "BBQ", "slots": [{"player": null, "status": "open", "rank": 999, "pos": "?", "nfl_team": "", "extra": false}]}, {"team": "SHAY", "slots": [{"player": "Sean Tucker", "status": "kept", "rank": 199, "pos": "RB65", "nfl_team": "TB", "extra": false}]}, {"team": "PLZ", "slots": [{"player": null, "status": "open", "rank": 193, "pos": "WR75", "nfl_team": "TEN", "extra": false}]}, {"team": "KOBY", "slots": [{"player": "Wan'Dale Robinson", "status": "kept", "rank": 109, "pos": "WR42", "nfl_team": "TEN", "extra": false}]}, {"team": "FU", "slots": [{"player": "Rams D/ST", "status": "dropped", "rank": 999, "pos": "DST", "nfl_team": "", "extra": false}]}, {"team": "SWET", "slots": [{"player": "Josh Reynolds", "status": "kept", "rank": 999, "pos": "?", "nfl_team": "", "extra": false}]}, {"team": "TMAL", "slots": [{"player": "Rashid Shaheed", "status": "kept", "rank": 153, "pos": "WR57", "nfl_team": "SEA", "extra": false}]}, {"team": "PRE", "slots": [{"player": "Chiefs D/ST", "status": "dropped", "rank": 999, "pos": "DST", "nfl_team": "", "extra": false}]}]]};
+const RANKINGS=[{"rank": 1, "player": "Josh Allen", "nfl_team": "BUF", "pos": "QB1", "best": 1, "worst": 2, "avg": 1.0}, {"rank": 2, "player": "Lamar Jackson", "nfl_team": "BAL", "pos": "QB2", "best": 2, "worst": 4, "avg": 2.3}, {"rank": 3, "player": "Drake Maye", "nfl_team": "NE", "pos": "QB3", "best": 2, "worst": 5, "avg": 3.2}, {"rank": 4, "player": "Joe Burrow", "nfl_team": "CIN", "pos": "QB4", "best": 2, "worst": 9, "avg": 4.6}, {"rank": 5, "player": "Jayden Daniels", "nfl_team": "WAS", "pos": "QB5", "best": 3, "worst": 18, "avg": 5.7}, {"rank": 6, "player": "Ja'Marr Chase", "nfl_team": "CIN", "pos": "WR1", "best": 6, "worst": 12, "avg": 6.7}, {"rank": 7, "player": "Jalen Hurts", "nfl_team": "PHI", "pos": "QB6", "best": 4, "worst": 16, "avg": 6.8}, {"rank": 8, "player": "Bijan Robinson", "nfl_team": "ATL", "pos": "RB1", "best": 10, "worst": 15, "avg": 10.6}, {"rank": 9, "player": "Puka Nacua", "nfl_team": "LAR", "pos": "WR2", "best": 6, "worst": 17, "avg": 11.0}, {"rank": 10, "player": "Justin Herbert", "nfl_team": "LAC", "pos": "QB7", "best": 7, "worst": 29, "avg": 11.7}, {"rank": 11, "player": "Jaxson Dart", "nfl_team": "NYG", "pos": "QB8", "best": 8, "worst": 26, "avg": 11.8}, {"rank": 12, "player": "Jaxon Smith-Njigba", "nfl_team": "SEA", "pos": "WR3", "best": 11, "worst": 15, "avg": 11.9}, {"rank": 13, "player": "Jahmyr Gibbs", "nfl_team": "DET", "pos": "RB2", "best": 10, "worst": 42, "avg": 14.0}, {"rank": 14, "player": "Caleb Williams", "nfl_team": "CHI", "pos": "QB9", "best": 5, "worst": 26, "avg": 14.6}, {"rank": 15, "player": "Trevor Lawrence", "nfl_team": "JAC", "pos": "QB10", "best": 7, "worst": 26, "avg": 15.2}, {"rank": 16, "player": "Dak Prescott", "nfl_team": "DAL", "pos": "QB11", "best": 9, "worst": 23, "avg": 16.1}, {"rank": 17, "player": "Amon-Ra St. Brown", "nfl_team": "DET", "pos": "WR4", "best": 12, "worst": 41, "avg": 18.1}, {"rank": 18, "player": "CeeDee Lamb", "nfl_team": "DAL", "pos": "WR5", "best": 14, "worst": 43, "avg": 18.9}, {"rank": 19, "player": "Christian McCaffrey", "nfl_team": "SF", "pos": "RB3", "best": 13, "worst": 42, "avg": 19.1}, {"rank": 20, "player": "Brock Purdy", "nfl_team": "SF", "pos": "QB12", "best": 11, "worst": 26, "avg": 20.2}, {"rank": 21, "player": "Justin Jefferson", "nfl_team": "MIN", "pos": "WR6", "best": 14, "worst": 44, "avg": 21.5}, {"rank": 22, "player": "Jonathan Taylor", "nfl_team": "IND", "pos": "RB4", "best": 15, "worst": 45, "avg": 21.9}, {"rank": 23, "player": "Drake London", "nfl_team": "ATL", "pos": "WR7", "best": 21, "worst": 47, "avg": 24.8}, {"rank": 24, "player": "Patrick Mahomes II", "nfl_team": "KC", "pos": "QB13", "best": 16, "worst": 41, "avg": 25.9}, {"rank": 25, "player": "Matthew Stafford", "nfl_team": "LAR", "pos": "QB14", "best": 16, "worst": 41, "avg": 27.6}, {"rank": 26, "player": "Bo Nix", "nfl_team": "DEN", "pos": "QB15", "best": 15, "worst": 41, "avg": 28.4}, {"rank": 27, "player": "Malik Nabers", "nfl_team": "NYG", "pos": "WR8", "best": 23, "worst": 52, "avg": 28.4}, {"rank": 28, "player": "Nico Collins", "nfl_team": "HOU", "pos": "WR9", "best": 24, "worst": 49, "avg": 29.6}, {"rank": 29, "player": "Rashee Rice", "nfl_team": "KC", "pos": "WR10", "best": 21, "worst": 47, "avg": 30.8}, {"rank": 30, "player": "De'Von Achane", "nfl_team": "MIA", "pos": "RB5", "best": 22, "worst": 58, "avg": 31.4}, {"rank": 31, "player": "Trey McBride", "nfl_team": "ARI", "pos": "TE1", "best": 31, "worst": 51, "avg": 34.0}, {"rank": 32, "player": "George Pickens", "nfl_team": "DAL", "pos": "WR11", "best": 27, "worst": 50, "avg": 34.6}, {"rank": 33, "player": "Ashton Jeanty", "nfl_team": "LV", "pos": "RB6", "best": 23, "worst": 55, "avg": 35.2}, {"rank": 34, "player": "James Cook III", "nfl_team": "BUF", "pos": "RB7", "best": 15, "worst": 48, "avg": 35.6}, {"rank": 35, "player": "Chris Olave", "nfl_team": "NO", "pos": "WR12", "best": 24, "worst": 62, "avg": 36.2}, {"rank": 36, "player": "A.J. Brown", "nfl_team": "PHI", "pos": "WR13", "best": 27, "worst": 57, "avg": 38.2}, {"rank": 37, "player": "Brock Bowers", "nfl_team": "LV", "pos": "TE2", "best": 31, "worst": 57, "avg": 38.4}, {"rank": 38, "player": "Jared Goff", "nfl_team": "DET", "pos": "QB16", "best": 18, "worst": 55, "avg": 38.9}, {"rank": 39, "player": "Chase Brown", "nfl_team": "CIN", "pos": "RB8", "best": 25, "worst": 48, "avg": 39.4}, {"rank": 40, "player": "Kyler Murray", "nfl_team": "MIN", "pos": "QB17", "best": 17, "worst": 64, "avg": 41.5}, {"rank": 41, "player": "Jordan Love", "nfl_team": "GB", "pos": "QB18", "best": 24, "worst": 56, "avg": 43.2}, {"rank": 42, "player": "Omarion Hampton", "nfl_team": "LAC", "pos": "RB9", "best": 33, "worst": 67, "avg": 43.6}, {"rank": 43, "player": "Saquon Barkley", "nfl_team": "PHI", "pos": "RB10", "best": 37, "worst": 66, "avg": 45.0}, {"rank": 44, "player": "Tetairoa McMillan", "nfl_team": "CAR", "pos": "WR14", "best": 35, "worst": 57, "avg": 45.2}, {"rank": 45, "player": "Malik Willis", "nfl_team": "MIA", "pos": "QB19", "best": 29, "worst": 70, "avg": 45.5}, {"rank": 46, "player": "Tyler Shough", "nfl_team": "NO", "pos": "QB20", "best": 26, "worst": 60, "avg": 47.0}, {"rank": 47, "player": "Garrett Wilson", "nfl_team": "NYJ", "pos": "WR15", "best": 34, "worst": 65, "avg": 47.2}, {"rank": 48, "player": "Baker Mayfield", "nfl_team": "TB", "pos": "QB21", "best": 23, "worst": 60, "avg": 48.5}, {"rank": 49, "player": "Kenneth Walker III", "nfl_team": "KC", "pos": "RB11", "best": 37, "worst": 77, "avg": 48.5}, {"rank": 50, "player": "Tee Higgins", "nfl_team": "CIN", "pos": "WR16", "best": 36, "worst": 70, "avg": 49.9}, {"rank": 51, "player": "DeVonta Smith", "nfl_team": "PHI", "pos": "WR17", "best": 35, "worst": 72, "avg": 50.9}, {"rank": 52, "player": "Josh Jacobs", "nfl_team": "GB", "pos": "RB12", "best": 42, "worst": 74, "avg": 54.1}, {"rank": 53, "player": "Jeremiyah Love", "nfl_team": "ARI", "pos": "RB13", "best": 33, "worst": 77, "avg": 55.2}, {"rank": 54, "player": "Ladd McConkey", "nfl_team": "LAC", "pos": "WR18", "best": 43, "worst": 79, "avg": 56.7}, {"rank": 55, "player": "Colston Loveland", "nfl_team": "CHI", "pos": "TE3", "best": 47, "worst": 86, "avg": 57.1}, {"rank": 56, "player": "Zay Flowers", "nfl_team": "BAL", "pos": "WR19", "best": 36, "worst": 73, "avg": 57.1}, {"rank": 57, "player": "Luther Burden III", "nfl_team": "CHI", "pos": "WR20", "best": 45, "worst": 69, "avg": 57.9}, {"rank": 58, "player": "C.J. Stroud", "nfl_team": "HOU", "pos": "QB22", "best": 25, "worst": 70, "avg": 59.2}, {"rank": 59, "player": "Jaylen Waddle", "nfl_team": "DEN", "pos": "WR21", "best": 44, "worst": 77, "avg": 59.4}, {"rank": 60, "player": "Derrick Henry", "nfl_team": "BAL", "pos": "RB14", "best": 48, "worst": 80, "avg": 60.5}, {"rank": 61, "player": "Sam Darnold", "nfl_team": "SEA", "pos": "QB23", "best": 26, "worst": 76, "avg": 60.9}, {"rank": 62, "player": "Breece Hall", "nfl_team": "NYJ", "pos": "RB15", "best": 48, "worst": 75, "avg": 62.5}, {"rank": 63, "player": "Davante Adams", "nfl_team": "LAR", "pos": "WR22", "best": 45, "worst": 93, "avg": 63.4}, {"rank": 64, "player": "Terry McLaurin", "nfl_team": "WAS", "pos": "WR23", "best": 52, "worst": 76, "avg": 63.8}, {"rank": 65, "player": "Emeka Egbuka", "nfl_team": "TB", "pos": "WR24", "best": 45, "worst": 82, "avg": 66.1}, {"rank": 66, "player": "Travis Etienne Jr.", "nfl_team": "NO", "pos": "RB16", "best": 54, "worst": 77, "avg": 66.2}, {"rank": 67, "player": "Bryce Young", "nfl_team": "CAR", "pos": "QB24", "best": 28, "worst": 83, "avg": 66.5}, {"rank": 68, "player": "Kyren Williams", "nfl_team": "LAR", "pos": "RB17", "best": 54, "worst": 79, "avg": 67.3}, {"rank": 69, "player": "Javonte Williams", "nfl_team": "DAL", "pos": "RB18", "best": 46, "worst": 81, "avg": 68.0}, {"rank": 70, "player": "Cam Ward", "nfl_team": "TEN", "pos": "QB25", "best": 33, "worst": 83, "avg": 69.6}, {"rank": 71, "player": "Mike Evans", "nfl_team": "SF", "pos": "WR25", "best": 52, "worst": 89, "avg": 70.2}, {"rank": 72, "player": "Jameson Williams", "nfl_team": "DET", "pos": "WR26", "best": 59, "worst": 90, "avg": 71.2}, {"rank": 73, "player": "Bucky Irving", "nfl_team": "TB", "pos": "RB19", "best": 48, "worst": 87, "avg": 71.4}, {"rank": 74, "player": "Tyler Warren", "nfl_team": "IND", "pos": "TE4", "best": 47, "worst": 93, "avg": 73.3}, {"rank": 75, "player": "Daniel Jones", "nfl_team": "IND", "pos": "QB26", "best": 27, "worst": 183, "avg": 77.9}, {"rank": 76, "player": "DJ Moore", "nfl_team": "BUF", "pos": "WR27", "best": 52, "worst": 128, "avg": 79.2}, {"rank": 77, "player": "Cam Skattebo", "nfl_team": "NYG", "pos": "RB20", "best": 65, "worst": 99, "avg": 79.2}, {"rank": 78, "player": "Christian Watson", "nfl_team": "GB", "pos": "WR28", "best": 63, "worst": 110, "avg": 79.5}, {"rank": 79, "player": "TreVeyon Henderson", "nfl_team": "NE", "pos": "RB21", "best": 67, "worst": 103, "avg": 81.5}, {"rank": 80, "player": "Jacoby Brissett", "nfl_team": "ARI", "pos": "QB27", "best": 22, "worst": 127, "avg": 81.5}, {"rank": 81, "player": "Rome Odunze", "nfl_team": "CHI", "pos": "WR29", "best": 57, "worst": 112, "avg": 83.1}, {"rank": 82, "player": "David Montgomery", "nfl_team": "HOU", "pos": "RB22", "best": 71, "worst": 99, "avg": 86.4}, {"rank": 83, "player": "D'Andre Swift", "nfl_team": "CHI", "pos": "RB23", "best": 77, "worst": 98, "avg": 86.9}, {"rank": 84, "player": "Quinshon Judkins", "nfl_team": "CLE", "pos": "RB24", "best": 71, "worst": 98, "avg": 87.0}, {"rank": 85, "player": "Tucker Kraft", "nfl_team": "GB", "pos": "TE5", "best": 77, "worst": 113, "avg": 90.3}, {"rank": 86, "player": "Courtland Sutton", "nfl_team": "DEN", "pos": "WR30", "best": 73, "worst": 110, "avg": 91.1}, {"rank": 87, "player": "Marvin Harrison Jr.", "nfl_team": "ARI", "pos": "WR31", "best": 80, "worst": 109, "avg": 91.3}, {"rank": 88, "player": "Carnell Tate", "nfl_team": "TEN", "pos": "WR32", "best": 68, "worst": 117, "avg": 91.7}, {"rank": 89, "player": "Chris Godwin Jr.", "nfl_team": "TB", "pos": "WR33", "best": 75, "worst": 116, "avg": 92.8}, {"rank": 90, "player": "Fernando Mendoza", "nfl_team": "LV", "pos": "QB28", "best": 30, "worst": 192, "avg": 93.1}, {"rank": 91, "player": "DK Metcalf", "nfl_team": "PIT", "pos": "WR34", "best": 73, "worst": 110, "avg": 94.1}, {"rank": 92, "player": "RJ Harvey", "nfl_team": "DEN", "pos": "RB25", "best": 65, "worst": 130, "avg": 94.5}, {"rank": 93, "player": "Harold Fannin Jr.", "nfl_team": "CLE", "pos": "TE6", "best": 80, "worst": 121, "avg": 94.5}, {"rank": 94, "player": "Jaylen Warren", "nfl_team": "PIT", "pos": "RB26", "best": 88, "worst": 105, "avg": 95.0}, {"rank": 95, "player": "Bhayshul Tuten", "nfl_team": "JAC", "pos": "RB27", "best": 81, "worst": 108, "avg": 95.2}, {"rank": 96, "player": "Jordyn Tyson", "nfl_team": "NO", "pos": "WR35", "best": 73, "worst": 117, "avg": 95.4}, {"rank": 97, "player": "Michael Wilson", "nfl_team": "ARI", "pos": "WR36", "best": 70, "worst": 122, "avg": 95.6}, {"rank": 98, "player": "Chuba Hubbard", "nfl_team": "CAR", "pos": "RB28", "best": 74, "worst": 132, "avg": 96.8}, {"rank": 99, "player": "Jadarian Price", "nfl_team": "SEA", "pos": "RB29", "best": 79, "worst": 108, "avg": 97.0}, {"rank": 100, "player": "Jakobi Meyers", "nfl_team": "JAC", "pos": "WR37", "best": 80, "worst": 117, "avg": 98.6}, {"rank": 101, "player": "Kyle Pitts Sr.", "nfl_team": "ATL", "pos": "TE7", "best": 86, "worst": 115, "avg": 102.1}, {"rank": 102, "player": "Alec Pierce", "nfl_team": "IND", "pos": "WR38", "best": 74, "worst": 122, "avg": 103.0}, {"rank": 103, "player": "Makai Lemon", "nfl_team": "PHI", "pos": "WR39", "best": 80, "worst": 116, "avg": 103.5}, {"rank": 104, "player": "Sam LaPorta", "nfl_team": "DET", "pos": "TE8", "best": 88, "worst": 119, "avg": 103.9}, {"rank": 105, "player": "Rico Dowdle", "nfl_team": "PIT", "pos": "RB30", "best": 92, "worst": 120, "avg": 104.3}, {"rank": 106, "player": "Brian Thomas Jr.", "nfl_team": "JAC", "pos": "WR40", "best": 75, "worst": 127, "avg": 104.5}, {"rank": 107, "player": "Michael Pittman Jr.", "nfl_team": "PIT", "pos": "WR41", "best": 83, "worst": 131, "avg": 105.2}, {"rank": 108, "player": "Rhamondre Stevenson", "nfl_team": "NE", "pos": "RB31", "best": 94, "worst": 120, "avg": 105.8}, {"rank": 109, "player": "Wan'Dale Robinson", "nfl_team": "TEN", "pos": "WR42", "best": 84, "worst": 132, "avg": 107.2}, {"rank": 110, "player": "Tony Pollard", "nfl_team": "TEN", "pos": "RB32", "best": 95, "worst": 124, "avg": 107.4}, {"rank": 111, "player": "Ricky Pearsall", "nfl_team": "SF", "pos": "WR43", "best": 91, "worst": 144, "avg": 110.9}, {"rank": 112, "player": "Kyle Monangai", "nfl_team": "CHI", "pos": "RB33", "best": 97, "worst": 127, "avg": 112.0}, {"rank": 113, "player": "Parker Washington", "nfl_team": "JAC", "pos": "WR44", "best": 89, "worst": 139, "avg": 116.3}, {"rank": 114, "player": "Jordan Addison", "nfl_team": "MIN", "pos": "WR45", "best": 102, "worst": 133, "avg": 117.5}, {"rank": 115, "player": "Aaron Jones Sr.", "nfl_team": "MIN", "pos": "RB34", "best": 101, "worst": 150, "avg": 118.9}, {"rank": 116, "player": "Josh Downs", "nfl_team": "IND", "pos": "WR46", "best": 85, "worst": 144, "avg": 121.0}, {"rank": 117, "player": "Jake Ferguson", "nfl_team": "DAL", "pos": "TE9", "best": 112, "worst": 136, "avg": 122.1}, {"rank": 118, "player": "Kenneth Gainwell", "nfl_team": "TB", "pos": "RB35", "best": 99, "worst": 145, "avg": 123.1}, {"rank": 119, "player": "Oronde Gadsden II", "nfl_team": "LAC", "pos": "TE10", "best": 113, "worst": 157, "avg": 123.3}, {"rank": 120, "player": "Dalton Kincaid", "nfl_team": "BUF", "pos": "TE11", "best": 109, "worst": 153, "avg": 123.9}, {"rank": 121, "player": "Jayden Reed", "nfl_team": "GB", "pos": "WR47", "best": 96, "worst": 142, "avg": 124.0}, {"rank": 122, "player": "Michael Penix Jr.", "nfl_team": "ATL", "pos": "QB29", "best": 34, "worst": 184, "avg": 108.6}, {"rank": 123, "player": "Travis Kelce", "nfl_team": "KC", "pos": "TE12", "best": 93, "worst": 162, "avg": 125.7}, {"rank": 124, "player": "Geno Smith", "nfl_team": "NYJ", "pos": "QB30", "best": 32, "worst": 184, "avg": 118.1}, {"rank": 125, "player": "Blake Corum", "nfl_team": "LAR", "pos": "RB36", "best": 107, "worst": 142, "avg": 125.9}, {"rank": 126, "player": "Khalil Shakir", "nfl_team": "BUF", "pos": "WR48", "best": 110, "worst": 142, "avg": 127.4}, {"rank": 127, "player": "J.K. Dobbins", "nfl_team": "DEN", "pos": "RB37", "best": 107, "worst": 155, "avg": 127.5}, {"rank": 128, "player": "Quentin Johnston", "nfl_team": "LAC", "pos": "WR49", "best": 110, "worst": 149, "avg": 129.6}, {"rank": 129, "player": "Isaiah Likely", "nfl_team": "NYG", "pos": "TE13", "best": 109, "worst": 190, "avg": 130.3}, {"rank": 130, "player": "Rachaad White", "nfl_team": "WAS", "pos": "RB38", "best": 105, "worst": 159, "avg": 133.2}, {"rank": 131, "player": "Jayden Higgins", "nfl_team": "HOU", "pos": "WR50", "best": 122, "worst": 149, "avg": 133.4}, {"rank": 132, "player": "Jacory Croskey-Merritt", "nfl_team": "WAS", "pos": "RB39", "best": 120, "worst": 150, "avg": 134.6}, {"rank": 133, "player": "George Kittle", "nfl_team": "SF", "pos": "TE14", "best": 93, "worst": 197, "avg": 137.3}, {"rank": 134, "player": "Romeo Doubs", "nfl_team": "NE", "pos": "WR51", "best": 102, "worst": 178, "avg": 140.4}, {"rank": 135, "player": "Xavier Worthy", "nfl_team": "KC", "pos": "WR52", "best": 122, "worst": 158, "avg": 141.7}, {"rank": 136, "player": "Tyler Allgeier", "nfl_team": "ARI", "pos": "RB40", "best": 119, "worst": 171, "avg": 142.5}, {"rank": 137, "player": "Dallas Goedert", "nfl_team": "PHI", "pos": "TE15", "best": 121, "worst": 161, "avg": 142.5}, {"rank": 138, "player": "Zach Charbonnet", "nfl_team": "SEA", "pos": "RB41", "best": 99, "worst": 182, "avg": 143.0}, {"rank": 139, "player": "Woody Marks", "nfl_team": "HOU", "pos": "RB42", "best": 104, "worst": 175, "avg": 143.2}, {"rank": 140, "player": "Jalen Coker", "nfl_team": "CAR", "pos": "WR53", "best": 123, "worst": 167, "avg": 143.4}, {"rank": 141, "player": "Jordan Mason", "nfl_team": "MIN", "pos": "RB43", "best": 119, "worst": 158, "avg": 144.3}, {"rank": 142, "player": "Tyrone Tracy Jr.", "nfl_team": "NYG", "pos": "RB44", "best": 130, "worst": 165, "avg": 144.9}, {"rank": 143, "player": "Juwan Johnson", "nfl_team": "NO", "pos": "TE16", "best": 123, "worst": 182, "avg": 146.3}, {"rank": 144, "player": "KC Concepcion", "nfl_team": "CLE", "pos": "WR54", "best": 95, "worst": 219, "avg": 146.8}, {"rank": 145, "player": "Tyjae Spears", "nfl_team": "TEN", "pos": "RB45", "best": 130, "worst": 166, "avg": 148.0}, {"rank": 146, "player": "Matthew Golden", "nfl_team": "GB", "pos": "WR55", "best": 114, "worst": 176, "avg": 148.2}, {"rank": 147, "player": "Shedeur Sanders", "nfl_team": "CLE", "pos": "QB31", "best": 40, "worst": 268, "avg": 134.4}, {"rank": 148, "player": "Alvin Kamara", "nfl_team": "NO", "pos": "RB46", "best": 116, "worst": 176, "avg": 150.9}, {"rank": 149, "player": "Dylan Sampson", "nfl_team": "CLE", "pos": "RB47", "best": 130, "worst": 168, "avg": 151.7}, {"rank": 150, "player": "Brenton Strange", "nfl_team": "JAC", "pos": "TE17", "best": 113, "worst": 197, "avg": 152.4}, {"rank": 151, "player": "James Conner", "nfl_team": "ARI", "pos": "RB48", "best": 103, "worst": 216, "avg": 155.0}, {"rank": 152, "player": "Deebo Samuel Sr.", "nfl_team": "FA", "pos": "WR56", "best": 134, "worst": 203, "avg": 155.4}, {"rank": 153, "player": "Rashid Shaheed", "nfl_team": "SEA", "pos": "WR57", "best": 147, "worst": 176, "avg": 158.6}, {"rank": 154, "player": "Mark Andrews", "nfl_team": "BAL", "pos": "TE18", "best": 125, "worst": 183, "avg": 159.1}, {"rank": 155, "player": "Isiah Pacheco", "nfl_team": "DET", "pos": "RB49", "best": 134, "worst": 177, "avg": 159.3}, {"rank": 156, "player": "Chris Rodriguez Jr.", "nfl_team": "JAC", "pos": "RB50", "best": 133, "worst": 212, "avg": 159.3}, {"rank": 157, "player": "Jerry Jeudy", "nfl_team": "CLE", "pos": "WR58", "best": 146, "worst": 189, "avg": 161.9}, {"rank": 158, "player": "Stefon Diggs", "nfl_team": "FA", "pos": "WR59", "best": 101, "worst": 264, "avg": 149.5}, {"rank": 159, "player": "Jonathon Brooks", "nfl_team": "CAR", "pos": "RB51", "best": 120, "worst": 229, "avg": 163.0}, {"rank": 160, "player": "Braelon Allen", "nfl_team": "NYJ", "pos": "RB52", "best": 139, "worst": 188, "avg": 164.4}, {"rank": 161, "player": "Travis Hunter", "nfl_team": "JAC", "pos": "WR60", "best": 107, "worst": 221, "avg": 164.6}, {"rank": 162, "player": "Keaton Mitchell", "nfl_team": "LAC", "pos": "RB53", "best": 150, "worst": 225, "avg": 165.9}, {"rank": 163, "player": "Hunter Henry", "nfl_team": "NE", "pos": "TE19", "best": 153, "worst": 184, "avg": 166.9}, {"rank": 164, "player": "Jauan Jennings", "nfl_team": "MIN", "pos": "WR61", "best": 110, "worst": 198, "avg": 154.3}, {"rank": 165, "player": "Jonah Coleman", "nfl_team": "DEN", "pos": "RB54", "best": 143, "worst": 243, "avg": 167.6}, {"rank": 166, "player": "Denzel Boston", "nfl_team": "CLE", "pos": "WR62", "best": 144, "worst": 203, "avg": 167.9}, {"rank": 167, "player": "Dalton Schultz", "nfl_team": "HOU", "pos": "TE20", "best": 136, "worst": 197, "avg": 170.3}, {"rank": 168, "player": "Adonai Mitchell", "nfl_team": "NYJ", "pos": "WR63", "best": 151, "worst": 205, "avg": 171.3}, {"rank": 169, "player": "Brandon Aiyuk", "nfl_team": "SF", "pos": "WR64", "best": 137, "worst": 229, "avg": 171.5}, {"rank": 170, "player": "Omar Cooper Jr.", "nfl_team": "NYJ", "pos": "WR65", "best": 127, "worst": 237, "avg": 173.7}, {"rank": 171, "player": "Brian Robinson Jr.", "nfl_team": "ATL", "pos": "RB55", "best": 154, "worst": 203, "avg": 174.4}, {"rank": 172, "player": "Jalen McMillan", "nfl_team": "TB", "pos": "WR66", "best": 133, "worst": 219, "avg": 176.8}, {"rank": 173, "player": "Emanuel Wilson", "nfl_team": "SEA", "pos": "RB56", "best": 132, "worst": 209, "avg": 177.9}, {"rank": 174, "player": "Kayshon Boutte", "nfl_team": "NE", "pos": "WR67", "best": 166, "worst": 196, "avg": 178.8}, {"rank": 175, "player": "Chig Okonkwo", "nfl_team": "WAS", "pos": "TE21", "best": 136, "worst": 219, "avg": 178.9}, {"rank": 176, "player": "Tank Bigsby", "nfl_team": "PHI", "pos": "RB57", "best": 162, "worst": 211, "avg": 180.5}, {"rank": 177, "player": "Tre' Harris", "nfl_team": "LAC", "pos": "WR68", "best": 144, "worst": 233, "avg": 176.5}, {"rank": 178, "player": "Troy Franklin", "nfl_team": "DEN", "pos": "WR69", "best": 146, "worst": 222, "avg": 182.5}, {"rank": 179, "player": "T.J. Hockenson", "nfl_team": "MIN", "pos": "TE22", "best": 151, "worst": 197, "avg": 183.8}, {"rank": 180, "player": "Tyreek Hill", "nfl_team": "FA", "pos": "WR70", "best": 124, "worst": 296, "avg": 172.4}, {"rank": 181, "player": "Mike Washington Jr.", "nfl_team": "LV", "pos": "RB58", "best": 156, "worst": 273, "avg": 185.8}, {"rank": 182, "player": "Kimani Vidal", "nfl_team": "LAC", "pos": "RB59", "best": 155, "worst": 220, "avg": 188.8}, {"rank": 183, "player": "Emmett Johnson", "nfl_team": "KC", "pos": "RB60", "best": 153, "worst": 290, "avg": 189.8}, {"rank": 184, "player": "Aaron Rodgers", "nfl_team": "FA", "pos": "QB32", "best": 36, "worst": 182, "avg": 122.5}, {"rank": 185, "player": "Tre Tucker", "nfl_team": "LV", "pos": "WR71", "best": 160, "worst": 259, "avg": 188.1}, {"rank": 186, "player": "Jaylin Noel", "nfl_team": "HOU", "pos": "WR72", "best": 151, "worst": 221, "avg": 183.9}, {"rank": 187, "player": "Nick Singleton", "nfl_team": "TEN", "pos": "RB61", "best": 146, "worst": 267, "avg": 195.0}, {"rank": 188, "player": "AJ Barner", "nfl_team": "SEA", "pos": "TE23", "best": 155, "worst": 212, "avg": 195.6}, {"rank": 189, "player": "Antonio Williams", "nfl_team": "WAS", "pos": "WR73", "best": 140, "worst": 270, "avg": 196.7}, {"rank": 190, "player": "Ray Davis", "nfl_team": "BUF", "pos": "RB62", "best": 165, "worst": 220, "avg": 196.9}, {"rank": 191, "player": "Tua Tagovailoa", "nfl_team": "ATL", "pos": "QB33", "best": 35, "worst": 277, "avg": 150.7}, {"rank": 192, "player": "Pat Bryant", "nfl_team": "DEN", "pos": "WR74", "best": 171, "worst": 239, "avg": 192.1}, {"rank": 193, "player": "Calvin Ridley", "nfl_team": "TEN", "pos": "WR75", "best": 167, "worst": 320, "avg": 198.7}, {"rank": 194, "player": "Kaytron Allen", "nfl_team": "WAS", "pos": "RB63", "best": 154, "worst": 271, "avg": 200.0}, {"rank": 195, "player": "Darnell Mooney", "nfl_team": "NYG", "pos": "WR76", "best": 164, "worst": 222, "avg": 195.6}, {"rank": 196, "player": "Kenyon Sadiq", "nfl_team": "NYJ", "pos": "TE24", "best": 148, "worst": 250, "avg": 201.2}, {"rank": 197, "player": "Jaylen Wright", "nfl_team": "MIA", "pos": "RB64", "best": 166, "worst": 252, "avg": 202.0}, {"rank": 198, "player": "Chimere Dike", "nfl_team": "TEN", "pos": "WR77", "best": 157, "worst": 248, "avg": 193.4}, {"rank": 199, "player": "Sean Tucker", "nfl_team": "TB", "pos": "RB65", "best": 170, "worst": 270, "avg": 203.8}, {"rank": 200, "player": "Ryan Flournoy", "nfl_team": "DAL", "pos": "WR78", "best": 180, "worst": 291, "avg": 198.9}, {"rank": 201, "player": "Isaac TeSlaa", "nfl_team": "DET", "pos": "WR79", "best": 184, "worst": 278, "avg": 199.4}, {"rank": 202, "player": "Dontayvion Wicks", "nfl_team": "PHI", "pos": "WR80", "best": 160, "worst": 224, "avg": 200.3}, {"rank": 203, "player": "Ty Simpson", "nfl_team": "LAR", "pos": "QB34", "best": 182, "worst": 297, "avg": 207.7}, {"rank": 204, "player": "Gunnar Helm", "nfl_team": "TEN", "pos": "TE25", "best": 183, "worst": 240, "avg": 210.5}, {"rank": 205, "player": "Elic Ayomanor", "nfl_team": "TEN", "pos": "WR81", "best": 170, "worst": 297, "avg": 210.0}, {"rank": 206, "player": "Terrance Ferguson", "nfl_team": "LAR", "pos": "TE26", "best": 194, "worst": 250, "avg": 215.2}, {"rank": 207, "player": "Devin Neal", "nfl_team": "NO", "pos": "RB66", "best": 168, "worst": 318, "avg": 215.8}, {"rank": 208, "player": "David Njoku", "nfl_team": "LAC", "pos": "TE27", "best": 187, "worst": 233, "avg": 216.4}, {"rank": 209, "player": "Chris Bell", "nfl_team": "MIA", "pos": "WR82", "best": 160, "worst": 308, "avg": 217.8}, {"rank": 210, "player": "Germie Bernard", "nfl_team": "PIT", "pos": "WR83", "best": 173, "worst": 266, "avg": 218.5}, {"rank": 211, "player": "Trey Benson", "nfl_team": "ARI", "pos": "RB67", "best": 132, "worst": 287, "avg": 209.2}, {"rank": 212, "player": "Kaleb Johnson", "nfl_team": "PIT", "pos": "RB68", "best": 159, "worst": 285, "avg": 219.5}, {"rank": 213, "player": "Cade Otton", "nfl_team": "TB", "pos": "TE28", "best": 189, "worst": 240, "avg": 221.1}, {"rank": 214, "player": "Mason Taylor", "nfl_team": "NYJ", "pos": "TE29", "best": 182, "worst": 321, "avg": 221.2}, {"rank": 215, "player": "Tank Dell", "nfl_team": "HOU", "pos": "WR84", "best": 195, "worst": 245, "avg": 215.4}, {"rank": 216, "player": "Demond Claiborne", "nfl_team": "MIN", "pos": "RB69", "best": 167, "worst": 268, "avg": 225.5}, {"rank": 217, "player": "Ollie Gordon II", "nfl_team": "MIA", "pos": "RB70", "best": 200, "worst": 251, "avg": 226.1}, {"rank": 218, "player": "Rashod Bateman", "nfl_team": "BAL", "pos": "WR85", "best": 193, "worst": 259, "avg": 218.6}, {"rank": 219, "player": "De'Zhaun Stribling", "nfl_team": "SF", "pos": "WR86", "best": 170, "worst": 274, "avg": 228.9}, {"rank": 220, "player": "Evan Engram", "nfl_team": "DEN", "pos": "TE30", "best": 194, "worst": 260, "avg": 229.7}, {"rank": 221, "player": "Pat Freiermuth", "nfl_team": "PIT", "pos": "TE31", "best": 202, "worst": 273, "avg": 229.9}, {"rank": 222, "player": "Zachariah Branch", "nfl_team": "ATL", "pos": "WR87", "best": 183, "worst": 263, "avg": 230.1}, {"rank": 223, "player": "Chris Brazzell II", "nfl_team": "CAR", "pos": "WR88", "best": 184, "worst": 278, "avg": 230.4}, {"rank": 224, "player": "Colby Parkinson", "nfl_team": "LAR", "pos": "TE32", "best": 198, "worst": 267, "avg": 232.2}, {"rank": 225, "player": "Jalen Nailor", "nfl_team": "LV", "pos": "WR89", "best": 169, "worst": 296, "avg": 219.3}, {"rank": 226, "player": "Malik Washington", "nfl_team": "MIA", "pos": "WR90", "best": 173, "worst": 309, "avg": 228.6}, {"rank": 227, "player": "Kendre Miller", "nfl_team": "NO", "pos": "RB71", "best": 177, "worst": 322, "avg": 233.1}, {"rank": 228, "player": "Elijah Sarratt", "nfl_team": "BAL", "pos": "WR91", "best": 191, "worst": 328, "avg": 233.2}, {"rank": 229, "player": "Malachi Fields", "nfl_team": "NYG", "pos": "WR92", "best": 194, "worst": 310, "avg": 233.5}, {"rank": 230, "player": "Kyle Williams", "nfl_team": "NE", "pos": "WR93", "best": 192, "worst": 270, "avg": 222.2}, {"rank": 231, "player": "Marvin Mims Jr.", "nfl_team": "DEN", "pos": "WR94", "best": 193, "worst": 263, "avg": 222.6}, {"rank": 232, "player": "Ja'Kobi Lane", "nfl_team": "BAL", "pos": "WR95", "best": 199, "worst": 286, "avg": 235.6}, {"rank": 233, "player": "Najee Harris", "nfl_team": "LAC", "pos": "RB72", "best": 168, "worst": 266, "avg": 218.7}, {"rank": 234, "player": "Cooper Kupp", "nfl_team": "SEA", "pos": "WR96", "best": 189, "worst": 281, "avg": 224.7}, {"rank": 235, "player": "Keon Coleman", "nfl_team": "BUF", "pos": "WR97", "best": 186, "worst": 292, "avg": 225.1}, {"rank": 236, "player": "Skyler Bell", "nfl_team": "BUF", "pos": "WR98", "best": 201, "worst": 311, "avg": 238.4}, {"rank": 237, "player": "Eli Stowers", "nfl_team": "PHI", "pos": "TE33", "best": 185, "worst": 323, "avg": 239.1}, {"rank": 238, "player": "Tory Horton", "nfl_team": "SEA", "pos": "WR99", "best": 205, "worst": 297, "avg": 231.3}, {"rank": 239, "player": "Theo Johnson", "nfl_team": "NYG", "pos": "TE34", "best": 183, "worst": 271, "avg": 235.6}, {"rank": 240, "player": "Isaiah Davis", "nfl_team": "NYJ", "pos": "RB73", "best": 192, "worst": 275, "avg": 227.6}, {"rank": 241, "player": "Jack Bech", "nfl_team": "LV", "pos": "WR100", "best": 197, "worst": 336, "avg": 233.0}, {"rank": 242, "player": "Christian Kirk", "nfl_team": "SF", "pos": "WR101", "best": 171, "worst": 272, "avg": 228.8}, {"rank": 243, "player": "Adam Randall", "nfl_team": "BAL", "pos": "RB74", "best": 213, "worst": 293, "avg": 244.7}, {"rank": 244, "player": "Ted Hurst", "nfl_team": "TB", "pos": "WR102", "best": 174, "worst": 302, "avg": 247.8}, {"rank": 245, "player": "Mack Hollins", "nfl_team": "NE", "pos": "WR103", "best": 195, "worst": 342, "avg": 236.5}, {"rank": 246, "player": "Brashard Smith", "nfl_team": "KC", "pos": "RB75", "best": 213, "worst": 279, "avg": 233.8}, {"rank": 247, "player": "Keenan Allen", "nfl_team": "LAC", "pos": "WR104", "best": 188, "worst": 261, "avg": 235.3}, {"rank": 248, "player": "Xavier Legette", "nfl_team": "CAR", "pos": "WR105", "best": 199, "worst": 275, "avg": 232.0}, {"rank": 249, "player": "Kirk Cousins", "nfl_team": "LV", "pos": "QB35", "best": 38, "worst": 292, "avg": 168.2}, {"rank": 250, "player": "Darius Slayton", "nfl_team": "NYG", "pos": "WR106", "best": 205, "worst": 349, "avg": 243.7}, {"rank": 251, "player": "LeQuint Allen Jr.", "nfl_team": "JAC", "pos": "RB76", "best": 202, "worst": 283, "avg": 243.6}, {"rank": 252, "player": "Ty Johnson", "nfl_team": "BUF", "pos": "RB77", "best": 209, "worst": 287, "avg": 243.7}, {"rank": 253, "player": "Deshaun Watson", "nfl_team": "CLE", "pos": "QB36", "best": 39, "worst": 287, "avg": 168.1}, {"rank": 254, "player": "Jaydon Blue", "nfl_team": "DAL", "pos": "RB78", "best": 204, "worst": 302, "avg": 250.8}, {"rank": 255, "player": "Jake Tonges", "nfl_team": "SF", "pos": "TE35", "best": 191, "worst": 315, "avg": 243.2}, {"rank": 256, "player": "Jerome Ford", "nfl_team": "WAS", "pos": "RB79", "best": 213, "worst": 274, "avg": 246.1}, {"rank": 257, "player": "Devaughn Vele", "nfl_team": "NO", "pos": "WR107", "best": 224, "worst": 332, "avg": 250.2}, {"rank": 258, "player": "Justice Hill", "nfl_team": "BAL", "pos": "RB80", "best": 208, "worst": 273, "avg": 250.8}, {"rank": 259, "player": "George Holani", "nfl_team": "SEA", "pos": "RB81", "best": 214, "worst": 283, "avg": 252.0}, {"rank": 260, "player": "Chris Brooks", "nfl_team": "GB", "pos": "RB82", "best": 202, "worst": 276, "avg": 252.4}, {"rank": 261, "player": "DJ Giddens", "nfl_team": "IND", "pos": "RB83", "best": 217, "worst": 290, "avg": 253.0}, {"rank": 262, "player": "Devin Singletary", "nfl_team": "NYG", "pos": "RB84", "best": 205, "worst": 280, "avg": 256.8}, {"rank": 263, "player": "Jaleel McLaughlin", "nfl_team": "DEN", "pos": "RB85", "best": 202, "worst": 304, "avg": 251.7}, {"rank": 264, "player": "Joe Mixon", "nfl_team": "FA", "pos": "RB86", "best": 163, "worst": 299, "avg": 244.8}, {"rank": 265, "player": "Jordan James", "nfl_team": "SF", "pos": "RB87", "best": 208, "worst": 317, "avg": 257.6}, {"rank": 266, "player": "J.J. McCarthy", "nfl_team": "MIN", "pos": "QB37", "best": 70, "worst": 278, "avg": 152.5}, {"rank": 267, "player": "Isaac Guerendo", "nfl_team": "SF", "pos": "RB88", "best": 217, "worst": 294, "avg": 260.3}, {"rank": 268, "player": "Hollywood Brown", "nfl_team": "PHI", "pos": "WR108", "best": 225, "worst": 334, "avg": 260.5}, {"rank": 269, "player": "Samaje Perine", "nfl_team": "CIN", "pos": "RB89", "best": 192, "worst": 296, "avg": 265.1}, {"rank": 270, "player": "Mike Gesicki", "nfl_team": "CIN", "pos": "TE36", "best": 205, "worst": 282, "avg": 247.1}, {"rank": 271, "player": "MarShawn Lloyd", "nfl_team": "GB", "pos": "RB90", "best": 213, "worst": 291, "avg": 264.8}, {"rank": 272, "player": "Tyquan Thornton", "nfl_team": "KC", "pos": "WR109", "best": 188, "worst": 330, "avg": 257.8}, {"rank": 273, "player": "Emari Demercado", "nfl_team": "KC", "pos": "RB91", "best": 220, "worst": 291, "avg": 262.3}, {"rank": 274, "player": "Seth McGowan", "nfl_team": "IND", "pos": "RB92", "best": 261, "worst": 322, "avg": 277.2}, {"rank": 275, "player": "Malik Davis", "nfl_team": "DAL", "pos": "RB93", "best": 239, "worst": 294, "avg": 265.1}, {"rank": 276, "player": "Isaiah Bond", "nfl_team": "CLE", "pos": "WR110", "best": 224, "worst": 343, "avg": 263.7}, {"rank": 277, "player": "Max Klare", "nfl_team": "LAR", "pos": "TE37", "best": 262, "worst": 315, "avg": 284.4}, {"rank": 278, "player": "Tahj Brooks", "nfl_team": "CIN", "pos": "RB94", "best": 235, "worst": 328, "avg": 274.0}, {"rank": 279, "player": "Trevor Etienne", "nfl_team": "CAR", "pos": "RB95", "best": 247, "worst": 305, "avg": 273.6}, {"rank": 280, "player": "Jarquez Hunter", "nfl_team": "LAR", "pos": "RB96", "best": 232, "worst": 300, "avg": 275.0}, {"rank": 281, "player": "Andrei Iosivas", "nfl_team": "CIN", "pos": "WR111", "best": 207, "worst": 306, "avg": 253.0}, {"rank": 282, "player": "Mac Jones", "nfl_team": "SF", "pos": "QB38", "best": 127, "worst": 282, "avg": 180.0}, {"rank": 283, "player": "Audric Estime", "nfl_team": "NO", "pos": "RB97", "best": 243, "worst": 327, "avg": 276.3}, {"rank": 284, "player": "Greg Dulcich", "nfl_team": "MIA", "pos": "TE38", "best": 186, "worst": 273, "avg": 222.1}, {"rank": 285, "player": "Cedric Tillman", "nfl_team": "CLE", "pos": "WR112", "best": 248, "worst": 334, "avg": 270.8}, {"rank": 286, "player": "Konata Mumpfield", "nfl_team": "LAR", "pos": "WR113", "best": 230, "worst": 310, "avg": 256.1}, {"rank": 287, "player": "Bam Knight", "nfl_team": "ARI", "pos": "RB98", "best": 214, "worst": 339, "avg": 273.9}, {"rank": 288, "player": "Oscar Delp", "nfl_team": "NO", "pos": "TE39", "best": 274, "worst": 329, "avg": 300.8}, {"rank": 289, "player": "J'Mari Taylor", "nfl_team": "JAC", "pos": "RB99", "best": 275, "worst": 348, "avg": 302.4}, {"rank": 290, "player": "Kareem Hunt", "nfl_team": "FA", "pos": "RB100", "best": 256, "worst": 314, "avg": 279.4}, {"rank": 291, "player": "Calvin Austin III", "nfl_team": "NYG", "pos": "WR114", "best": 236, "worst": 337, "avg": 272.9}, {"rank": 292, "player": "Luke McCaffrey", "nfl_team": "WAS", "pos": "WR115", "best": 245, "worst": 335, "avg": 274.0}, {"rank": 293, "player": "Tez Johnson", "nfl_team": "TB", "pos": "WR116", "best": 245, "worst": 325, "avg": 272.9}, {"rank": 294, "player": "Jalen Royals", "nfl_team": "KC", "pos": "WR117", "best": 234, "worst": 338, "avg": 264.9}, {"rank": 295, "player": "Will Shipley", "nfl_team": "PHI", "pos": "RB101", "best": 259, "worst": 304, "avg": 277.8}, {"rank": 296, "player": "Kaelon Black", "nfl_team": "SF", "pos": "RB102", "best": 200, "worst": 280, "avg": 240.1}, {"rank": 297, "player": "Justin Fields", "nfl_team": "KC", "pos": "QB39", "best": 35, "worst": 184, "avg": 133.0}, {"rank": 298, "player": "Jahan Dotson", "nfl_team": "ATL", "pos": "WR118", "best": 169, "worst": 325, "avg": 259.6}, {"rank": 299, "player": "Nick Chubb", "nfl_team": "FA", "pos": "RB103", "best": 274, "worst": 322, "avg": 287.4}, {"rank": 300, "player": "Michael Carter", "nfl_team": "TEN", "pos": "RB104", "best": 271, "worst": 329, "avg": 288.4}, {"rank": 301, "player": "Noah Gray", "nfl_team": "KC", "pos": "TE40", "best": 242, "worst": 306, "avg": 274.2}, {"rank": 302, "player": "Darnell Washington", "nfl_team": "PIT", "pos": "TE41", "best": 236, "worst": 303, "avg": 270.8}, {"rank": 303, "player": "Tyler Higbee", "nfl_team": "LAR", "pos": "TE42", "best": 233, "worst": 293, "avg": 271.5}, {"rank": 304, "player": "Austin Ekeler", "nfl_team": "FA", "pos": "RB105", "best": 270, "worst": 299, "avg": 282.4}, {"rank": 305, "player": "Olamide Zaccheaus", "nfl_team": "ATL", "pos": "WR119", "best": 245, "worst": 320, "avg": 279.3}, {"rank": 306, "player": "Dont'e Thornton Jr.", "nfl_team": "LV", "pos": "WR120", "best": 244, "worst": 333, "avg": 276.6}, {"rank": 307, "player": "Joshua Palmer", "nfl_team": "BUF", "pos": "WR121", "best": 253, "worst": 345, "avg": 288.8}, {"rank": 308, "player": "Jalen Tolbert", "nfl_team": "MIA", "pos": "WR122", "best": 226, "worst": 328, "avg": 275.6}, {"rank": 309, "player": "Anthony Richardson Sr.", "nfl_team": "IND", "pos": "QB40", "best": 177, "worst": 284, "avg": 205.0}, {"rank": 310, "player": "Bryce Lance", "nfl_team": "NO", "pos": "WR123", "best": 227, "worst": 311, "avg": 267.1}, {"rank": 311, "player": "John Metchie III", "nfl_team": "CAR", "pos": "WR124", "best": 254, "worst": 341, "avg": 288.9}, {"rank": 312, "player": "Caleb Douglas", "nfl_team": "MIA", "pos": "WR125", "best": 213, "worst": 313, "avg": 282.3}, {"rank": 313, "player": "Elijah Arroyo", "nfl_team": "SEA", "pos": "TE43", "best": 252, "worst": 313, "avg": 282.5}, {"rank": 314, "player": "DeMario Douglas", "nfl_team": "NE", "pos": "WR126", "best": 263, "worst": 330, "avg": 291.6}, {"rank": 315, "player": "Brenen Thompson", "nfl_team": "LAC", "pos": "WR127", "best": 258, "worst": 310, "avg": 284.5}, {"rank": 316, "player": "Xavier Hutchinson", "nfl_team": "HOU", "pos": "WR128", "best": 261, "worst": 333, "avg": 288.9}, {"rank": 317, "player": "Eli Heidenreich", "nfl_team": "PIT", "pos": "RB106", "best": 259, "worst": 324, "avg": 281.0}, {"rank": 318, "player": "Jaylin Lane", "nfl_team": "WAS", "pos": "WR129", "best": 265, "worst": 326, "avg": 291.9}, {"rank": 319, "player": "Savion Williams", "nfl_team": "GB", "pos": "WR130", "best": 266, "worst": 329, "avg": 286.1}, {"rank": 320, "player": "Ja'Tavion Sanders", "nfl_team": "CAR", "pos": "TE44", "best": 250, "worst": 316, "avg": 279.2}, {"rank": 321, "player": "Tommy Myers", "nfl_team": "FA", "pos": "TE45", "best": 253, "worst": 286, "avg": 267.8}, {"rank": 322, "player": "Darren Waller", "nfl_team": "FA", "pos": "TE46", "best": 257, "worst": 316, "avg": 292.1}, {"rank": 323, "player": "Justin Joly", "nfl_team": "DEN", "pos": "TE47", "best": 275, "worst": 340, "avg": 295.4}, {"rank": 324, "player": "Raheim Sanders", "nfl_team": "CLE", "pos": "RB107", "best": 277, "worst": 338, "avg": 302.6}, {"rank": 325, "player": "Michael Mayer", "nfl_team": "LV", "pos": "TE48", "best": 246, "worst": 319, "avg": 287.3}, {"rank": 326, "player": "John Bates", "nfl_team": "WAS", "pos": "TE49", "best": 246, "worst": 311, "avg": 275.8}, {"rank": 327, "player": "Treylon Burks", "nfl_team": "WAS", "pos": "WR131", "best": 234, "worst": 308, "avg": 281.4}, {"rank": 328, "player": "Jawhar Jordan", "nfl_team": "HOU", "pos": "RB108", "best": 275, "worst": 322, "avg": 293.3}, {"rank": 329, "player": "Joe Milton III", "nfl_team": "DAL", "pos": "QB41", "best": 182, "worst": 182, "avg": 182.0}, {"rank": 330, "player": "Kevin Coleman Jr.", "nfl_team": "MIA", "pos": "WR132", "best": 229, "worst": 324, "avg": 286.0}, {"rank": 331, "player": "Tutu Atwell", "nfl_team": "MIA", "pos": "WR133", "best": 248, "worst": 331, "avg": 297.8}, {"rank": 332, "player": "Ben Sinnott", "nfl_team": "WAS", "pos": "TE50", "best": 272, "worst": 329, "avg": 298.7}, {"rank": 333, "player": "Carson Beck", "nfl_team": "ARI", "pos": "QB42", "best": 182, "worst": 216, "avg": 199.0}, {"rank": 334, "player": "Kendrick Bourne", "nfl_team": "ARI", "pos": "WR134", "best": 262, "worst": 336, "avg": 304.0}, {"rank": 335, "player": "KaVontae Turpin", "nfl_team": "DAL", "pos": "WR135", "best": 236, "worst": 337, "avg": 282.5}, {"rank": 336, "player": "Terrell Jennings", "nfl_team": "NE", "pos": "RB109", "best": 275, "worst": 294, "avg": 283.8}, {"rank": 337, "player": "Antonio Gibson", "nfl_team": "FA", "pos": "RB110", "best": 276, "worst": 327, "avg": 297.2}, {"rank": 338, "player": "Cyrus Allen", "nfl_team": "KC", "pos": "WR136", "best": 210, "worst": 328, "avg": 285.3}, {"rank": 339, "player": "Kalif Raymond", "nfl_team": "CHI", "pos": "WR137", "best": 222, "worst": 352, "avg": 287.5}, {"rank": 340, "player": "Cole Kmet", "nfl_team": "CHI", "pos": "TE51", "best": 264, "worst": 319, "avg": 301.8}, {"rank": 341, "player": "Tai Felton", "nfl_team": "MIN", "pos": "WR138", "best": 242, "worst": 285, "avg": 270.7}, {"rank": 342, "player": "Dameon Pierce", "nfl_team": "PHI", "pos": "RB111", "best": 281, "worst": 346, "avg": 312.3}, {"rank": 343, "player": "Malik Benson", "nfl_team": "LV", "pos": "WR139", "best": 174, "worst": 348, "avg": 306.0}, {"rank": 344, "player": "Zach Ertz", "nfl_team": "FA", "pos": "TE52", "best": 273, "worst": 321, "avg": 295.5}, {"rank": 345, "player": "Noah Fant", "nfl_team": "NO", "pos": "TE53", "best": 284, "worst": 334, "avg": 306.8}, {"rank": 346, "player": "Luke Musgrave", "nfl_team": "GB", "pos": "TE54", "best": 294, "worst": 321, "avg": 308.0}, {"rank": 347, "player": "Joe Flacco", "nfl_team": "CIN", "pos": "QB43", "best": 196, "worst": 298, "avg": 247.0}, {"rank": 348, "player": "CJ Daniels", "nfl_team": "LAR", "pos": "WR140", "best": 263, "worst": 351, "avg": 313.0}, {"rank": 349, "player": "Nick Westbrook-Ikhine", "nfl_team": "IND", "pos": "WR141", "best": 186, "worst": 331, "avg": 258.5}, {"rank": 350, "player": "Dawson Knox", "nfl_team": "BUF", "pos": "TE55", "best": 290, "worst": 332, "avg": 314.6}, {"rank": 351, "player": "Eli Raridon", "nfl_team": "NE", "pos": "TE56", "best": 263, "worst": 347, "avg": 315.0}, {"rank": 352, "player": "Damien Martinez", "nfl_team": "GB", "pos": "RB112", "best": 279, "worst": 318, "avg": 306.5}, {"rank": 353, "player": "Marcus Mariota", "nfl_team": "WAS", "pos": "QB44", "best": 180, "worst": 180, "avg": 180.0}, {"rank": 354, "player": "Daniel Bellinger", "nfl_team": "TEN", "pos": "TE57", "best": 246, "worst": 350, "avg": 308.5}, {"rank": 355, "player": "Zavion Thomas", "nfl_team": "CHI", "pos": "WR142", "best": 289, "worst": 341, "avg": 318.0}, {"rank": 356, "player": "Dyami Brown", "nfl_team": "WAS", "pos": "WR143", "best": 196, "worst": 196, "avg": 196.0}, {"rank": 357, "player": "Jonnu Smith", "nfl_team": "FA", "pos": "TE58", "best": 286, "worst": 339, "avg": 315.5}, {"rank": 358, "player": "Deion Burks", "nfl_team": "IND", "pos": "WR144", "best": 293, "worst": 342, "avg": 315.8}, {"rank": 359, "player": "Le'Veon Moss", "nfl_team": "MIA", "pos": "RB113", "best": 272, "worst": 349, "avg": 314.7}, {"rank": 360, "player": "Sam Roush", "nfl_team": "CHI", "pos": "TE59", "best": 297, "worst": 345, "avg": 315.0}, {"rank": 361, "player": "Jam Miller", "nfl_team": "NE", "pos": "RB114", "best": 299, "worst": 304, "avg": 301.5}, {"rank": 362, "player": "Jordan Whittington", "nfl_team": "LAR", "pos": "WR145", "best": 256, "worst": 256, "avg": 256.0}, {"rank": 363, "player": "Mitch Tinsley", "nfl_team": "CIN", "pos": "WR146", "best": 258, "worst": 258, "avg": 258.0}, {"rank": 364, "player": "Marlin Klein", "nfl_team": "HOU", "pos": "TE60", "best": 286, "worst": 326, "avg": 306.0}, {"rank": 365, "player": "Elijah Higgins", "nfl_team": "ARI", "pos": "TE61", "best": 302, "worst": 335, "avg": 320.7}, {"rank": 366, "player": "Roschon Johnson", "nfl_team": "CHI", "pos": "RB115", "best": 280, "worst": 280, "avg": 280.0}, {"rank": 367, "player": "Zavier Scott", "nfl_team": "MIN", "pos": "RB116", "best": 284, "worst": 284, "avg": 284.0}, {"rank": 368, "player": "Phil Mafah", "nfl_team": "DAL", "pos": "RB117", "best": 294, "worst": 344, "avg": 319.0}, {"rank": 369, "player": "Kyle Juszczyk", "nfl_team": "SF", "pos": "RB118", "best": 291, "worst": 291, "avg": 291.0}, {"rank": 370, "player": "Nate Boerkircher", "nfl_team": "JAC", "pos": "TE62", "best": 291, "worst": 291, "avg": 291.0}, {"rank": 371, "player": "Theo Wease Jr.", "nfl_team": "MIA", "pos": "WR147", "best": 293, "worst": 293, "avg": 293.0}, {"rank": 372, "player": "Devontez Walker", "nfl_team": "BAL", "pos": "WR148", "best": 308, "worst": 336, "avg": 322.0}, {"rank": 373, "player": "Jameis Winston", "nfl_team": "NYG", "pos": "QB45", "best": 296, "worst": 296, "avg": 296.0}, {"rank": 374, "player": "Jared Wiley", "nfl_team": "KC", "pos": "TE63", "best": 296, "worst": 296, "avg": 296.0}, {"rank": 375, "player": "Xavier Restrepo", "nfl_team": "TEN", "pos": "WR149", "best": 297, "worst": 297, "avg": 297.0}, {"rank": 376, "player": "Gardner Minshew II", "nfl_team": "ARI", "pos": "QB46", "best": 299, "worst": 299, "avg": 299.0}, {"rank": 377, "player": "Antwane Wells Jr.", "nfl_team": "FA", "pos": "WR150", "best": 299, "worst": 299, "avg": 299.0}, {"rank": 378, "player": "Julian Fleming", "nfl_team": "FA", "pos": "WR151", "best": 300, "worst": 300, "avg": 300.0}, {"rank": 379, "player": "Brandin Cooks", "nfl_team": "FA", "pos": "WR152", "best": 301, "worst": 301, "avg": 301.0}, {"rank": 380, "player": "Greg Dortch", "nfl_team": "DET", "pos": "WR153", "best": 305, "worst": 305, "avg": 305.0}, {"rank": 381, "player": "Tommy Tremble", "nfl_team": "CAR", "pos": "TE64", "best": 306, "worst": 306, "avg": 306.0}, {"rank": 382, "player": "Mitchell Evans", "nfl_team": "CAR", "pos": "TE65", "best": 308, "worst": 308, "avg": 308.0}, {"rank": 383, "player": "Durham Smythe", "nfl_team": "BAL", "pos": "TE66", "best": 309, "worst": 309, "avg": 309.0}, {"rank": 384, "player": "Demarcus Robinson", "nfl_team": "SF", "pos": "WR154", "best": 327, "worst": 332, "avg": 329.5}, {"rank": 385, "player": "Jackson Hawes", "nfl_team": "BUF", "pos": "TE67", "best": 312, "worst": 312, "avg": 312.0}, {"rank": 386, "player": "Erick All Jr.", "nfl_team": "CIN", "pos": "TE68", "best": 324, "worst": 338, "avg": 331.0}, {"rank": 387, "player": "Austin Hooper", "nfl_team": "ATL", "pos": "TE69", "best": 313, "worst": 313, "avg": 313.0}, {"rank": 388, "player": "Rasheen Ali", "nfl_team": "BAL", "pos": "RB119", "best": 314, "worst": 314, "avg": 314.0}, {"rank": 389, "player": "Tyler Badie", "nfl_team": "DEN", "pos": "RB120", "best": 318, "worst": 318, "avg": 318.0}, {"rank": 390, "player": "Michael Trigg", "nfl_team": "DAL", "pos": "TE70", "best": 318, "worst": 318, "avg": 318.0}, {"rank": 391, "player": "Robert Henry Jr.", "nfl_team": "WAS", "pos": "RB121", "best": 324, "worst": 344, "avg": 334.0}, {"rank": 392, "player": "Thomas Fidone II", "nfl_team": "NYG", "pos": "TE71", "best": 319, "worst": 319, "avg": 319.0}, {"rank": 393, "player": "Jack Endries", "nfl_team": "CIN", "pos": "TE72", "best": 320, "worst": 320, "avg": 320.0}, {"rank": 394, "player": "Tanner Koziol", "nfl_team": "JAC", "pos": "TE73", "best": 321, "worst": 321, "avg": 321.0}, {"rank": 395, "player": "Dylan Laube", "nfl_team": "LV", "pos": "RB122", "best": 326, "worst": 326, "avg": 326.0}, {"rank": 396, "player": "Roman Wilson", "nfl_team": "PIT", "pos": "WR155", "best": 330, "worst": 330, "avg": 330.0}, {"rank": 397, "player": "Charlie Kolar", "nfl_team": "LAC", "pos": "TE74", "best": 331, "worst": 331, "avg": 331.0}, {"rank": 398, "player": "Jeremy McNichols", "nfl_team": "WAS", "pos": "RB123", "best": 340, "worst": 340, "avg": 340.0}, {"rank": 399, "player": "Roman Hemby", "nfl_team": "LV", "pos": "RB124", "best": 340, "worst": 340, "avg": 340.0}, {"rank": 400, "player": "Ty Chandler", "nfl_team": "NO", "pos": "RB125", "best": 343, "worst": 343, "avg": 343.0}, {"rank": 401, "player": "Jaydn Ott", "nfl_team": "KC", "pos": "RB126", "best": 343, "worst": 343, "avg": 343.0}, {"rank": 402, "player": "Desmond Reid", "nfl_team": "BUF", "pos": "RB127", "best": 347, "worst": 347, "avg": 347.0}];
+const ROSTERS={"PLZ": ["Jalen Hurts", "Bijan Robinson", "Tyrone Tracy Jr.", "Tetairoa McMillan", "George Pickens", "Harold Fannin Jr.", "D'Andre Swift", "Jacoby Brissett", "Chris Godwin Jr.", "Rome Odunze", "C.J. Stroud", "Jayden Higgins", "Kenneth Walker III", "Dillon Gabriel", "Will Shipley", "Ollie Gordon II", "DJ Giddens", "Darren Waller", "David Njoku", "Kendre Miller"], "KOBY": ["Lamar Jackson", "Aaron Jones Sr.", "Josh Jacobs", "Marvin Harrison Jr.", "DeVonta Smith", "Jaxon Smith-Njigba", "Travis Etienne Jr.", "Rico Dowdle", "Davante Adams", "Aaron Rodgers", "Christian Watson", "Russell Wilson", "Ricky Pearsall", "Chuba Hubbard", "Evan Engram", "Wan'Dale Robinson", "Emanuel Wilson", "Brandon Aiyuk", "Ryan Flournoy"], "PRE": ["Joe Burrow", "RJ Harvey", "James Cook III", "Zay Flowers", "Jameson Williams", "Jaylen Waddle", "Ja'Marr Chase", "Jauan Jennings", "Jacory Croskey-Merritt", "Dylan Sampson", "Kyle Monangai", "Chris Rodriguez Jr.", "Jordan Mason", "Jalen Coker", "Tyrod Taylor", "Jaylen Wright", "Patrick Mahomes", "Devin Neal"], "BPE": ["Kirk Cousins", "David Montgomery", "Bam Knight", "Rashee Rice", "Courtland Sutton", "Jordan Addison", "Khalil Shakir", "Tyler Shough", "Bryce Young", "Geno Smith", "Colston Loveland", "Kyle Pitts Sr.", "Kareem Hunt", "Demarcus Robinson", "Kendrick Bourne", "Jayden Daniels", "Austin Ekeler", "Calvin Ridley"], "MOON": ["Josh Allen", "Saquon Barkley", "Kenneth Gainwell", "Ladd McConkey", "Keenan Allen", "Trey McBride", "Jerry Jeudy", "Shedeur Sanders", "Tua Tagovailoa", "Travis Kelce", "George Kittle", "Xavier Legette", "Darius Slayton", "Brandin Cooks", "Kayshon Boutte", "Mark Andrews", "Tyler Huntley", "Devin Singletary", "Joe Mixon", "Isiah Pacheco", "Luke McCaffrey"], "TMAL": ["Jared Goff", "Jonathan Taylor", "De'Von Achane", "Tee Higgins", "Michael Wilson", "DJ Moore", "Ashton Jeanty", "Justin Herbert", "Cooper Kupp", "Darnell Mooney", "Brian Robinson Jr.", "Dallas Goedert", "Blake Corum", "Rashid Shaheed", "Tre Tucker", "Chimere Dike", "Audric Estime", "Taysom Hill", "Josh Johnson", "Kyler Murray", "J.K. Dobbins", "Brock Bowers"], "SHAY": ["Derrick Henry", "Jahmyr Gibbs", "DK Metcalf", "Jakobi Meyers", "Stefon Diggs", "Breece Hall", "Baker Mayfield", "Xavier Worthy", "Keon Coleman", "Rashod Bateman", "Ray Davis", "Joe Flacco", "Josh Downs", "Sean Tucker", "Chris Moore", "Jameis Winston", "Andrei Iosivas", "Daniel Jones", "Garrett Wilson", "Jalen McMillan"], "SWET": ["Dak Prescott", "Christian McCaffrey", "TreVeyon Henderson", "CeeDee Lamb", "Mike Evans", "Chris Olave", "Chase Brown", "Jordan Love", "Javonte Williams", "Deebo Samuel", "Cedric Tillman", "Rachaad White", "Jake Ferguson", "Brashard Smith", "JuJu Smith-Schuster", "Michael Carter", "Olamide Zaccheaus", "Dalton Schultz", "Bhayshul Tuten", "Josh Reynolds"], "FU": ["Matthew Stafford", "Tyjae Spears", "Bucky Irving", "A.J. Brown", "Puka Nacua", "Amon-Ra St. Brown", "Emari Demercado", "Malik Willis", "Matthew Golden", "Kaleb Johnson", "Sam Darnold", "Jaxson Dart", "Luther Burden III", "Tyler Allgeier", "Keaton Mitchell", "John Metchie III", "Trey Lance", "Dalton Kincaid", "Colby Parkinson", "MarShawn Lloyd", "Tory Horton", "Trey Benson"], "BBQ": ["Caleb Williams", "Quinshon Judkins", "Zach Charbonnet", "Drake London", "Jayden Reed", "Hunter Henry", "Oronde Gadsden", "Drake Maye", "J.J. McCarthy", "Cam Skattebo", "Hollywood Brown", "Nick Chubb", "T.J. Hockenson", "Sam LaPorta", "Alec Pierce", "Tez Johnson", "Devaughn Vele", "Zach Ertz", "Tyreek Hill", "Najee Harris"], "TNT": ["Trevor Lawrence", "Omarion Hampton", "Kyren Williams", "Nico Collins", "Parker Washington", "Tyler Warren", "Woody Marks", "Brock Purdy", "Cam Ward", "Travis Hunter", "Brian Thomas Jr.", "Tony Pollard", "Jaydon Blue", "Adonai Mitchell", "Elic Ayomanor", "Isaac TeSlaa", "Kimani Vidal", "Marcus Mariota", "Braelon Allen", "Malik Nabers"], "AMS": ["Bo Nix", "Rhamondre Stevenson", "Jaylen Warren", "Justin Jefferson", "Emeka Egbuka", "Terry McLaurin", "Troy Franklin", "Michael Pittman Jr.", "Alvin Kamara", "Romeo Doubs", "Justice Hill", "Christian Kirk", "Tank Bigsby", "Chris Brooks", "Quentin Johnston", "Malik Washington", "Jeremy McNichols", "Mason Rudolph", "James Conner", "Michael Penix Jr.", "Tucker Kraft"]};
+const DRAFT_ORDER=["SWET", "AMS", "MOON", "KOBY", "PLZ", "PRE", "BPE", "SHAY", "BBQ", "TMAL", "TNT", "FU"];
+const PICK_OWNERSHIP={"MOON_1": "BBQ", "BBQ_20": "MOON", "TNT_16": "PLZ", "PLZ_19": "TNT", "PLZ_12": "BPE", "BPE_19": "PLZ"};
+const OPEN_PICK_LABELS_INIT={"MOON_1_0": "P.01", "FU_1_0": "P.02", "MOON_2_0": "P.03", "BPE_2_0": "P.04", "TNT_2_0": "P.05", "AMS_8_0": "P.06", "PRE_8_0": "P.07", "TNT_9_0": "P.08", "BBQ_11_0": "P.09", "PRE_11_0": "P.10", "BBQ_18_0": "P.11", "TNT_18_0": "P.12", "PLZ_20_0": "P.13", "BBQ_20_0": "P.14"};
+const REGULAR_PICK_LABELS={"BPE": {"1": {"label": "1.07", "overall": 7}, "2": {"label": "2.07", "overall": 19}, "3": {"label": "3.06", "overall": 30}, "4": {"label": "4.07", "overall": 43}, "5": {"label": "5.06", "overall": 54}, "6": {"label": "6.07", "overall": 67}, "7": {"label": "7.06", "overall": 78}, "8": {"label": "8.07", "overall": 91}, "9": {"label": "9.06", "overall": 102}, "10": {"label": "10.07", "overall": 115}, "11": {"label": "11.06", "overall": 126}, "12": {"label": "12.07", "overall": 139}, "13": {"label": "13.06", "overall": 150}, "14": {"label": "14.07", "overall": 163}, "15": {"label": "15.06", "overall": 174}, "16": {"label": "16.07", "overall": 187}, "17": {"label": "17.06", "overall": 198}, "18": {"label": "18.07", "overall": 211}, "19": {"label": "19.06", "overall": 222}, "20": {"label": "20.07", "overall": 235}}, "TNT": {"1": {"label": "1.11", "overall": 11}, "2": {"label": "2.11", "overall": 23}, "3": {"label": "3.02", "overall": 26}, "4": {"label": "4.11", "overall": 47}, "5": {"label": "5.02", "overall": 50}, "6": {"label": "6.11", "overall": 71}, "7": {"label": "7.02", "overall": 74}, "8": {"label": "8.11", "overall": 95}, "9": {"label": "9.02", "overall": 98}, "10": {"label": "10.11", "overall": 119}, "11": {"label": "11.02", "overall": 122}, "12": {"label": "12.11", "overall": 143}, "13": {"label": "13.02", "overall": 146}, "14": {"label": "14.11", "overall": 167}, "15": {"label": "15.02", "overall": 170}, "16": {"label": "16.11", "overall": 191}, "17": {"label": "17.02", "overall": 194}, "18": {"label": "18.11", "overall": 215}, "19": {"label": "19.02", "overall": 218}, "20": {"label": "20.11", "overall": 239}}, "AMS": {"1": {"label": "1.02", "overall": 2}, "2": {"label": "2.02", "overall": 14}, "3": {"label": "3.11", "overall": 35}, "4": {"label": "4.02", "overall": 38}, "5": {"label": "5.11", "overall": 59}, "6": {"label": "6.02", "overall": 62}, "7": {"label": "7.11", "overall": 83}, "8": {"label": "8.02", "overall": 86}, "9": {"label": "9.11", "overall": 107}, "10": {"label": "10.02", "overall": 110}, "11": {"label": "11.11", "overall": 131}, "12": {"label": "12.02", "overall": 134}, "13": {"label": "13.11", "overall": 155}, "14": {"label": "14.02", "overall": 158}, "15": {"label": "15.11", "overall": 179}, "16": {"label": "16.02", "overall": 182}, "17": {"label": "17.11", "overall": 203}, "18": {"label": "18.02", "overall": 206}, "19": {"label": "19.11", "overall": 227}, "20": {"label": "20.02", "overall": 230}}, "MOON": {"1": {"label": "1.03", "overall": 3}, "2": {"label": "2.03", "overall": 15}, "3": {"label": "3.10", "overall": 34}, "4": {"label": "4.03", "overall": 39}, "5": {"label": "5.10", "overall": 58}, "6": {"label": "6.03", "overall": 63}, "7": {"label": "7.10", "overall": 82}, "8": {"label": "8.03", "overall": 87}, "9": {"label": "9.10", "overall": 106}, "10": {"label": "10.03", "overall": 111}, "11": {"label": "11.10", "overall": 130}, "12": {"label": "12.03", "overall": 135}, "13": {"label": "13.10", "overall": 154}, "14": {"label": "14.03", "overall": 159}, "15": {"label": "15.10", "overall": 178}, "16": {"label": "16.03", "overall": 183}, "17": {"label": "17.10", "overall": 202}, "18": {"label": "18.03", "overall": 207}, "19": {"label": "19.10", "overall": 226}, "20": {"label": "20.03", "overall": 231}}, "BBQ": {"1": {"label": "1.09", "overall": 9}, "2": {"label": "2.09", "overall": 21}, "3": {"label": "3.04", "overall": 28}, "4": {"label": "4.09", "overall": 45}, "5": {"label": "5.04", "overall": 52}, "6": {"label": "6.09", "overall": 69}, "7": {"label": "7.04", "overall": 76}, "8": {"label": "8.09", "overall": 93}, "9": {"label": "9.04", "overall": 100}, "10": {"label": "10.09", "overall": 117}, "11": {"label": "11.04", "overall": 124}, "12": {"label": "12.09", "overall": 141}, "13": {"label": "13.04", "overall": 148}, "14": {"label": "14.09", "overall": 165}, "15": {"label": "15.04", "overall": 172}, "16": {"label": "16.09", "overall": 189}, "17": {"label": "17.04", "overall": 196}, "18": {"label": "18.09", "overall": 213}, "19": {"label": "19.04", "overall": 220}, "20": {"label": "20.09", "overall": 237}}, "SHAY": {"1": {"label": "1.08", "overall": 8}, "2": {"label": "2.08", "overall": 20}, "3": {"label": "3.05", "overall": 29}, "4": {"label": "4.08", "overall": 44}, "5": {"label": "5.05", "overall": 53}, "6": {"label": "6.08", "overall": 68}, "7": {"label": "7.05", "overall": 77}, "8": {"label": "8.08", "overall": 92}, "9": {"label": "9.05", "overall": 101}, "10": {"label": "10.08", "overall": 116}, "11": {"label": "11.05", "overall": 125}, "12": {"label": "12.08", "overall": 140}, "13": {"label": "13.05", "overall": 149}, "14": {"label": "14.08", "overall": 164}, "15": {"label": "15.05", "overall": 173}, "16": {"label": "16.08", "overall": 188}, "17": {"label": "17.05", "overall": 197}, "18": {"label": "18.08", "overall": 212}, "19": {"label": "19.05", "overall": 221}, "20": {"label": "20.08", "overall": 236}}, "PLZ": {"1": {"label": "1.05", "overall": 5}, "2": {"label": "2.05", "overall": 17}, "3": {"label": "3.08", "overall": 32}, "4": {"label": "4.05", "overall": 41}, "5": {"label": "5.08", "overall": 56}, "6": {"label": "6.05", "overall": 65}, "7": {"label": "7.08", "overall": 80}, "8": {"label": "8.05", "overall": 89}, "9": {"label": "9.08", "overall": 104}, "10": {"label": "10.05", "overall": 113}, "11": {"label": "11.08", "overall": 128}, "12": {"label": "12.05", "overall": 137}, "13": {"label": "13.08", "overall": 152}, "14": {"label": "14.05", "overall": 161}, "15": {"label": "15.08", "overall": 176}, "16": {"label": "16.05", "overall": 185}, "17": {"label": "17.08", "overall": 200}, "18": {"label": "18.05", "overall": 209}, "19": {"label": "19.08", "overall": 224}, "20": {"label": "20.05", "overall": 233}}, "KOBY": {"1": {"label": "1.04", "overall": 4}, "2": {"label": "2.04", "overall": 16}, "3": {"label": "3.09", "overall": 33}, "4": {"label": "4.04", "overall": 40}, "5": {"label": "5.09", "overall": 57}, "6": {"label": "6.04", "overall": 64}, "7": {"label": "7.09", "overall": 81}, "8": {"label": "8.04", "overall": 88}, "9": {"label": "9.09", "overall": 105}, "10": {"label": "10.04", "overall": 112}, "11": {"label": "11.09", "overall": 129}, "12": {"label": "12.04", "overall": 136}, "13": {"label": "13.09", "overall": 153}, "14": {"label": "14.04", "overall": 160}, "15": {"label": "15.09", "overall": 177}, "16": {"label": "16.04", "overall": 184}, "17": {"label": "17.09", "overall": 201}, "18": {"label": "18.04", "overall": 208}, "19": {"label": "19.09", "overall": 225}, "20": {"label": "20.04", "overall": 232}}, "FU": {"1": {"label": "1.12", "overall": 12}, "2": {"label": "2.12", "overall": 24}, "3": {"label": "3.01", "overall": 25}, "4": {"label": "4.12", "overall": 48}, "5": {"label": "5.01", "overall": 49}, "6": {"label": "6.12", "overall": 72}, "7": {"label": "7.01", "overall": 73}, "8": {"label": "8.12", "overall": 96}, "9": {"label": "9.01", "overall": 97}, "10": {"label": "10.12", "overall": 120}, "11": {"label": "11.01", "overall": 121}, "12": {"label": "12.12", "overall": 144}, "13": {"label": "13.01", "overall": 145}, "14": {"label": "14.12", "overall": 168}, "15": {"label": "15.01", "overall": 169}, "16": {"label": "16.12", "overall": 192}, "17": {"label": "17.01", "overall": 193}, "18": {"label": "18.12", "overall": 216}, "19": {"label": "19.01", "overall": 217}, "20": {"label": "20.12", "overall": 240}}, "SWET": {"1": {"label": "1.01", "overall": 1}, "2": {"label": "2.01", "overall": 13}, "3": {"label": "3.12", "overall": 36}, "4": {"label": "4.01", "overall": 37}, "5": {"label": "5.12", "overall": 60}, "6": {"label": "6.01", "overall": 61}, "7": {"label": "7.12", "overall": 84}, "8": {"label": "8.01", "overall": 85}, "9": {"label": "9.12", "overall": 108}, "10": {"label": "10.01", "overall": 109}, "11": {"label": "11.12", "overall": 132}, "12": {"label": "12.01", "overall": 133}, "13": {"label": "13.12", "overall": 156}, "14": {"label": "14.01", "overall": 157}, "15": {"label": "15.12", "overall": 180}, "16": {"label": "16.01", "overall": 181}, "17": {"label": "17.12", "overall": 204}, "18": {"label": "18.01", "overall": 205}, "19": {"label": "19.12", "overall": 228}, "20": {"label": "20.01", "overall": 229}}, "TMAL": {"1": {"label": "1.10", "overall": 10}, "2": {"label": "2.10", "overall": 22}, "3": {"label": "3.03", "overall": 27}, "4": {"label": "4.10", "overall": 46}, "5": {"label": "5.03", "overall": 51}, "6": {"label": "6.10", "overall": 70}, "7": {"label": "7.03", "overall": 75}, "8": {"label": "8.10", "overall": 94}, "9": {"label": "9.03", "overall": 99}, "10": {"label": "10.10", "overall": 118}, "11": {"label": "11.03", "overall": 123}, "12": {"label": "12.10", "overall": 142}, "13": {"label": "13.03", "overall": 147}, "14": {"label": "14.10", "overall": 166}, "15": {"label": "15.03", "overall": 171}, "16": {"label": "16.10", "overall": 190}, "17": {"label": "17.03", "overall": 195}, "18": {"label": "18.10", "overall": 214}, "19": {"label": "19.03", "overall": 219}, "20": {"label": "20.10", "overall": 238}}, "PRE": {"1": {"label": "1.06", "overall": 6}, "2": {"label": "2.06", "overall": 18}, "3": {"label": "3.07", "overall": 31}, "4": {"label": "4.06", "overall": 42}, "5": {"label": "5.07", "overall": 55}, "6": {"label": "6.06", "overall": 66}, "7": {"label": "7.07", "overall": 79}, "8": {"label": "8.06", "overall": 90}, "9": {"label": "9.07", "overall": 103}, "10": {"label": "10.06", "overall": 114}, "11": {"label": "11.07", "overall": 127}, "12": {"label": "12.06", "overall": 138}, "13": {"label": "13.07", "overall": 151}, "14": {"label": "14.06", "overall": 162}, "15": {"label": "15.07", "overall": 175}, "16": {"label": "16.06", "overall": 186}, "17": {"label": "17.07", "overall": 199}, "18": {"label": "18.06", "overall": 210}, "19": {"label": "19.07", "overall": 223}, "20": {"label": "20.06", "overall": 234}}};
+const TEAM_NAMES={"BPE": "Big Penix Energy", "TNT": "Tennessee Tuxedos", "AMS": "Zal Werken Voor Vissen", "MOON": "Moon Mammoths", "BBQ": "BBQ Rice", "SHAY": "Skokie Shakes", "PLZ": "Choosing Beggars", "KOBY": "Riley Reid Option", "FU": "Son of Thor", "SWET": "The MoistureMakers", "TMAL": "Maloney Football Team", "PRE": "Hollywood Premieres"};
+const TEAM_OWNERS={"BPE": "Rahul", "TNT": "Dave", "AMS": "Alan", "MOON": "Brett", "BBQ": "Nate", "SHAY": "Marc", "PLZ": "Sean", "KOBY": "Koby", "FU": "Colin", "SWET": "Ronnie", "TMAL": "Terri", "PRE": "Paul"};
+const STRANDED_PLAYERS=new Set(["Kendrick Bourne", "Dalton Schultz", "Jeremy McNichols", "Alec Pierce", "Chimere Dike", "Bam Knight", "Tyler Huntley", "Tre Tucker", "Colby Parkinson", "Malik Washington", "Trey Lance", "Mason Rudolph", "Devin Singletary", "Marcus Mariota", "Chris Moore", "Demarcus Robinson", "Will Shipley", "Josh Johnson", "Tez Johnson", "Tyrod Taylor", "Ryan Flournoy", "Kayshon Boutte", "Zach Ertz", "Jameis Winston", "Saquon Barkley", "Josh Allen", "JuJu Smith-Schuster", "Michael Carter", "Hunter Henry", "Emari Demercado", "Devaughn Vele", "Parker Washington", "Oronde Gadsden", "Andrei Iosivas", "Emanuel Wilson", "Darren Waller", "Harold Fannin Jr.", "Taysom Hill", "Jacoby Brissett", "Kimani Vidal", "Olamide Zaccheaus", "Luke McCaffrey", "John Metchie III", "Audric Estime"]);
+const NAME_MAP={"Patrick Mahomes II": "Patrick Mahomes", "Oronde Gadsden II": "Oronde Gadsden", "Deebo Samuel Sr.": "Deebo Samuel"};
+
+const TEAMS = BOARD_DATA.teams;
+const N = 12;
+const rankMap = {};
+RANKINGS.forEach(r => { rankMap[r.player] = r; });
+const allRosteredRaw = new Set(Object.values(ROSTERS).flat());
+// Normalize names to match rankings (e.g. "Patrick Mahomes" -> "Patrick Mahomes II")
+const allRostered = new Set();
+allRosteredRaw.forEach(name => {
+  allRostered.add(name);
+  // Also add the rankings version if there's a mapping
+  for (const [rankName, rosterName] of Object.entries(NAME_MAP)) {
+    if (rosterName === name) allRostered.add(rankName);
+  }
+});
+
+// ── RELEASE STATE ──
+// releasedState[team][ri][si] = true means this slot is released (pick is open)
+// Default: all eligible players are considered "kept" until released
+const releasedState = {};
+TEAMS.forEach(t => { releasedState[t] = {}; });
+
+function isReleased(team, ri, si) {
+  return !!(releasedState[team][`${team}_${ri}_${si}`]);
+}
+
+function isKeeperEligible(slot) {
+  return slot.status === 'kept' && !!slot.player;
+}
+
+// ── KEEPER LIMITS for validation ──
+const TIER_LIMITS = {1:3, 2:3, 3:4};
+const QB_MAX = 2;
+function getTier(r) { return r<=5?1:r<=10?2:3; }
+function getTierLabel(t) { return t===1?'R1-5':t===2?'R6-10':'R11-20'; }
+
+function getKeptCounts(team) {
+  const c = {t1:0,t2:0,t3:0,qb:0};
+  const ti = TEAMS.indexOf(team);
+  BOARD_DATA.board.forEach((row,ri) => {
+    const tier = getTier(ri+1);
+    row[ti].slots.forEach((slot,si) => {
+      if (isKeeperEligible(slot) && !isReleased(team,ri,si)) {
+        c[`t${tier}`]++;
+        if (slot.pos && slot.pos.startsWith('QB')) c.qb++;
+      }
+    });
+  });
+  return c;
+}
+
+// ── PICK NUMBERING ──
+// Recompute open pick P.XX numbers dynamically based on current released state
+function getDraftOrder(rnd) {
+  if (rnd <= 2) return [...DRAFT_ORDER];
+  const sr = rnd - 2;
+  return sr%2===1 ? [...DRAFT_ORDER].reverse() : [...DRAFT_ORDER];
+}
+
+function computeOpenPickLabels() {
+  // Open picks = board 'open' slots + released player slots, in draft order
+  const labels = {};
+  let pickNum = 0;
+  for (let rnd = 1; rnd <= 20; rnd++) {
+    const order = getDraftOrder(rnd);
+    for (const team of order) {
+      const ti = TEAMS.indexOf(team);
+      const cell = BOARD_DATA.board[rnd-1][ti];
+      cell.slots.forEach((slot, si) => {
+        const isOpen = slot.status === 'open';
+        const isRel = isKeeperEligible(slot) && isReleased(team, rnd-1, si);
+        if (isOpen || isRel) {
+          pickNum++;
+          labels[`${team}_${rnd}_${si}`] = `P.${String(pickNum).padStart(2,'0')}`;
+        }
+      });
+    }
+  }
+  return labels;
+}
+
+let openPickLabels = computeOpenPickLabels();
+
+function refreshPickLabels() {
+  openPickLabels = computeOpenPickLabels();
+  // Update all open/released card labels in DOM
+  TEAMS.forEach(team => {
+    const ti = TEAMS.indexOf(team);
+    BOARD_DATA.board.forEach((row, ri) => {
+      row[ti].slots.forEach((slot, si) => {
+        const isOpen = slot.status === 'open';
+        const isRel = isKeeperEligible(slot) && isReleased(team, ri, si);
+        if (!isOpen && !isRel) return;
+        const el = document.getElementById(`card_${team}_${ri}_${si}`);
+        if (!el) return;
+        const key = `${team}_${ri+1}_${si}`;
+        const lbl = openPickLabels[key] || '';
+        const numEl = el.querySelector('.open-pick-num');
+        if (numEl) numEl.textContent = lbl;
+      });
+    });
+  });
+}
+
+function getOpenPickLabel(team, rnd, si) {
+  return openPickLabels[`${team}_${rnd}_${si}`] || '';
+}
+
+function getRegularPickLabel(team, rnd) {
+  const reg = REGULAR_PICK_LABELS[team] && REGULAR_PICK_LABELS[team][String(rnd)];
+  return reg || {label:`${rnd}.??`, overall:0};
+}
+
+// ── TOGGLE RELEASE ──
+function toggleRelease(team, ri, si, slot, cardEl) {
+  const key = `${team}_${ri}_${si}`;
+  const currently = isReleased(team, ri, si);
+  
+  if (currently) {
+    // Reinstate - check if within limits
+    const check = canKeep(team, slot, ri);
+    if (!check.ok) {
+      showLimitModal(team, ri, si, slot, check);
+      return;
+    }
+    releasedState[team][key] = false;
+    // Restore as kept card
+    buildAndReplaceCard(slot, team, ri, si);
+  } else {
+    // Release
+    releasedState[team][key] = true;
+    // Show as released open pick
+    buildAndReplaceCard(slot, team, ri, si);
+  }
+  refreshPickLabels();
+  updateFA();
+}
+
+function canKeep(team, slot, ri) {
+  const tier = getTier(ri+1);
+  const c = getKeptCounts(team);
+  if (c[`t${tier}`] >= TIER_LIMITS[tier]) return {ok:false, reason:'tier', tier};
+  if (slot.pos && slot.pos.startsWith('QB') && c.qb >= QB_MAX) return {ok:false, reason:'qb'};
+  return {ok:true};
+}
+
+function buildAndReplaceCard(slot, team, ri, si) {
+  const old = document.getElementById(`card_${team}_${ri}_${si}`);
+  if (!old) return;
+  const newCard = buildCard(slot, team, ri, si);
+  old.parentNode.replaceChild(newCard, old);
+}
+
+// ── MODAL for reinstate limits ──
+let pendingReinstate = null;
+function showLimitModal(team, ri, si, slot, check) {
+  const tier = getTier(ri+1);
+  const reason = check.reason === 'qb'
+    ? `Max ${QB_MAX} QBs are already being kept. Release a QB first to reinstate <strong>${slot.player}</strong>.`
+    : `${getTierLabel(tier)} already has ${TIER_LIMITS[tier]} players being kept. Release one first.`;
+  document.getElementById('modalTitle').textContent = check.reason==='qb' ? 'QB Limit' : `${getTierLabel(tier)} Full`;
+  document.getElementById('modalMsg').innerHTML = reason;
+  const ti = TEAMS.indexOf(team);
+  const mc = document.getElementById('modalCurrent');
+  mc.innerHTML = `<div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:1px;margin-bottom:8px">CURRENTLY KEPT${check.reason==='tier'?' IN '+getTierLabel(tier):' QBs'}</div>`;
+  BOARD_DATA.board.forEach((row, ri2) => {
+    const t = getTier(ri2+1);
+    row[ti].slots.forEach((s, si2) => {
+      if (!isKeeperEligible(s)) return;
+      if (isReleased(team, ri2, si2)) return;
+      if (check.reason==='tier' && t!==tier) return;
+      if (check.reason==='qb' && !(s.pos&&s.pos.startsWith('QB'))) return;
+      const rk = rankMap[s.player]||{};
+      const div = document.createElement('div');
+      div.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border)';
+      div.innerHTML = `<span style="font-size:12px;font-weight:600">${s.player} <span style="font-size:10px;color:var(--muted)">R${ri2+1} &middot; ${rk.rank?'#'+rk.rank:'NR'}</span></span>
+        <button onclick="forceRelease('${team}',${ri2},${si2},'${team}_${ri}_${si}')" style="font-size:11px;padding:3px 10px;border-radius:12px;border:1px solid #e05252;color:#e05252;background:transparent;cursor:pointer;font-family:'IBM Plex Mono',monospace">Release</button>`;
+      mc.appendChild(div);
+    });
+  });
+  pendingReinstate = {team, ri, si, slot};
+  document.getElementById('modalOverlay').classList.add('open');
+}
+
+function forceRelease(team, ri, si, reinstateKey) {
+  // Release the blocking player so we can reinstate the pending one
+  const key = `${team}_${ri}_${si}`;
+  releasedState[team][key] = true;
+  const cell = BOARD_DATA.board[ri][TEAMS.indexOf(team)];
+  buildAndReplaceCard(cell.slots[si], team, ri, si);
+  // Now reinstate the pending player
+  if (pendingReinstate) {
+    const {team:pt, ri:pri, si:psi, slot:pslot} = pendingReinstate;
+    const pkey = `${pt}_${pri}_${psi}`;
+    releasedState[pt][pkey] = false;
+    buildAndReplaceCard(pslot, pt, pri, psi);
+  }
+  closeModal();
+  refreshPickLabels();
+  updateFA();
+}
+
+function closeModal() { document.getElementById('modalOverlay').classList.remove('open'); pendingReinstate=null; }
+function closeModalOverlay(e) { if(e.target===e.currentTarget) closeModal(); }
+
+// ── PREDICT KEEPERS ──
+let predictMode = false;
+function togglePredict() {
+  if (predictMode) { reinstateAll(); return; }
+  predictMode = true;
+  document.getElementById('predictBtn').classList.add('active');
+  document.getElementById('predictBtn').textContent = '★ Predicted';
+  document.getElementById('clearBtn').style.display = '';
+  TEAMS.forEach(team => runPredictForTeam(team));
+  refreshPickLabels();
+  updateFA();
+}
+
+function getThreshold(rnd) {
+  if (rnd<=2) return 1.0; if (rnd<=5) return 1.15; if (rnd<=10) return 1.3; return 1.6;
+}
+
+function runPredictForTeam(team) {
+  const ti = TEAMS.indexOf(team);
+  // First reinstate all for this team
+  BOARD_DATA.board.forEach((row,ri) => {
+    row[ti].slots.forEach((slot,si) => {
+      if (isKeeperEligible(slot)) releasedState[team][`${team}_${ri}_${si}`] = false;
+    });
+  });
+  // Now release players that are NOT value keeps (release the worst ones, keep value)
+  const byTier = {1:[],2:[],3:[]};
+  BOARD_DATA.board.forEach((row,ri) => {
+    const rnd=ri+1, tier=getTier(rnd);
+    row[ti].slots.forEach((slot,si) => {
+      if (!isKeeperEligible(slot)) return;
+      const rk = rankMap[slot.player];
+      if (!rk) { byTier[tier].push({slot,ri,si,rank:999,isValue:false}); return; }
+      const reg = REGULAR_PICK_LABELS[team]&&REGULAR_PICK_LABELS[team][String(rnd)];
+      const overall = reg ? reg.overall : rnd*12;
+      const isValue = rk.rank <= overall * getThreshold(rnd);
+      byTier[tier].push({slot,ri,si,rank:rk.rank,isValue});
+    });
+  });
+  // For each tier: keep top TIER_LIMITS value keepers, release rest
+  let totalQBs = 0;
+  [1,2,3].forEach(tier => {
+    const sorted = byTier[tier].filter(x=>x.isValue).sort((a,b)=>a.rank-b.rank);
+    let kept = 0;
+    const keptSet = new Set();
+    for (const {slot,ri,si,rank} of sorted) {
+      if (kept >= TIER_LIMITS[tier]) break;
+      const isQB = slot.pos&&slot.pos.startsWith('QB');
+      if (isQB && totalQBs >= QB_MAX) continue;
+      keptSet.add(`${ri}_${si}`);
+      kept++;
+      if (isQB) totalQBs++;
+    }
+    // Release everyone in this tier NOT in keptSet
+    byTier[tier].forEach(({slot,ri,si}) => {
+      if (!keptSet.has(`${ri}_${si}`)) {
+        releasedState[team][`${team}_${ri}_${si}`] = true;
+      }
+    });
+  });
+  // Rebuild all cards for this team
+  BOARD_DATA.board.forEach((row,ri) => {
+    row[ti].slots.forEach((slot,si) => {
+      if (isKeeperEligible(slot)) buildAndReplaceCard(slot, team, ri, si);
+    });
+  });
+}
+
+function reinstateAll() {
+  predictMode = false;
+  TEAMS.forEach(team => {
+    const ti = TEAMS.indexOf(team);
+    releasedState[team] = {};
+    BOARD_DATA.board.forEach((row,ri) => {
+      row[ti].slots.forEach((slot,si) => {
+        if (isKeeperEligible(slot)) buildAndReplaceCard(slot, team, ri, si);
+      });
+    });
+  });
+  document.getElementById('predictBtn').classList.remove('active');
+  document.getElementById('predictBtn').textContent = '★ Predict Keepers';
+  document.getElementById('clearBtn').style.display = 'none';
+  refreshPickLabels();
+  updateFA();
+}
+
+// ── HELPERS ──
+function posShort(pos){return pos?pos.replace(/[0-9]/g,''):'?';}
+function posClass(pos){
+  const p=posShort(pos);
+  if(p==='QB') return 'pos-QB'; if(p==='RB') return 'pos-RB';
+  if(p==='WR') return 'pos-WR'; if(p==='TE') return 'pos-TE';
+  if(p==='DST') return 'pos-DST'; return '';
+}
+function rankClass(r){return r<=12?'rank-elite':r<=36?'rank-great':r<=100?'rank-solid':'rank-fringe';}
+function ecrToAV(rank){
+  if(!rank||rank>=999) return null;
+  const rnd=Math.ceil(rank/12), pick=rank-(rnd-1)*12;
+  return {rnd, pick, label:`${rnd}.${String(pick).padStart(2,'0')}`};
+}
+
+// ── BUILD CARD ──
+function buildCard(slot, team, ri, si) {
+  const id = `card_${team}_${ri}_${si}`;
+  const el = document.createElement('div');
+  el.id = id;
+  const rnd = ri + 1;
+  const openLabel = getOpenPickLabel(team, rnd, si);
+
+  if (slot.status === 'no_pick') {
+    el.className = 'card no_pick';
+    el.setAttribute('data-status','no_pick');
+    el.setAttribute('data-rank','999');
+    el.setAttribute('data-pos','');
+    const ownerKey=`${team}_${rnd}`;
+    const newOwner=PICK_OWNERSHIP[ownerKey];
+    const note=newOwner?`Pick by ${TEAM_NAMES[newOwner]}`:(slot.note||'Pick traded away');
+    el.innerHTML=`<span class="no-pick-label">NO PICK</span><span class="no-pick-sub">${note}</span>`;
+    return el;
+  }
+
+  if (slot.status === 'open') {
+    el.className = 'card open';
+    el.setAttribute('data-status','open');
+    el.setAttribute('data-rank','999');
+    el.setAttribute('data-pos','');
+    const ownerKey=`${team}_${rnd}`;
+    const newOwner=PICK_OWNERSHIP[ownerKey];
+    const pickBy=newOwner?`Pick by ${TEAM_NAMES[newOwner]}`:'Open Pick';
+    el.innerHTML=`<span class="open-pick-num">${openLabel}</span><span class="open-pick-sub">${pickBy}</span>`;
+    return el;
+  }
+
+  const ps = posShort(slot.pos);
+  const rk = rankMap[slot.player] || {};
+  const rank = rk.rank || 999;
+  const released = isReleased(team, ri, si);
+
+  if (released) {
+    // Released: show as open pick with player name + RELEASED below
+    el.className = 'card open released-slot';
+    el.setAttribute('data-status','released');
+    el.setAttribute('data-rank','999');
+    el.setAttribute('data-pos',ps);
+    el.innerHTML = `
+      <span class="open-pick-num">${openLabel}</span>
+      <span class="open-pick-sub">Open Pick</span>
+      <span class="open-released">${slot.player} — RELEASED</span>`;
+    el.addEventListener('click', () => toggleRelease(team, ri, si, slot, el));
+    el.title = 'Click to reinstate';
+    return el;
+  }
+
+  // Normal kept card
+  el.className = 'card kept';
+  el.setAttribute('data-status','kept');
+  el.setAttribute('data-pos',ps);
+  el.setAttribute('data-rank',rank);
+  el.title = 'Click to release';
+
+  const posMatch = (rk.pos||slot.pos||'').match(/([A-Za-z]+)(\d+)/);
+  const posRankNum = posMatch ? posMatch[2] : '';
+  const posGroup = posMatch ? posMatch[1] : ps;
+  const av = ecrToAV(rank);
+  let avHtml = '';
+  if (av) {
+    const avRnd = av.rnd;
+    const avClass = avRnd<rnd?'av-value':avRnd===rnd?'av-fair':'av-costly';
+    avHtml = `<span class="meta-label" style="margin-left:3px">AV</span><span class="av-num ${avClass}">${av.label}</span>`;
+  }
+  const rankDisp = rank<999 ? `#${rank}` : 'NR';
+
+  el.innerHTML = `
+    <div class="card-name">${slot.player}</div>
+    <div class="card-meta">
+      <span class="pos-badge ${posClass(slot.pos)}">${posGroup||ps}</span>
+      <span class="meta-label">POS</span><span class="rank-num">${posRankNum||'—'}</span>
+      <span class="meta-label">OVR</span><span class="rank-num ${rankClass(rank)}">${rank<999?rank:'NR'}</span>
+      ${avHtml}
+      <span class="nfl-tag">${rk.nfl_team||slot.nfl_team||''}</span>
+    </div>`;
+
+  if (isKeeperEligible(slot)) {
+    el.addEventListener('click', () => toggleRelease(team, ri, si, slot, el));
+  }
+  return el;
+}
+
+// ── BOARD BUILD ──
+const TIER_LABELS = {1:'ROUNDS 1–5 · Keep up to 3',6:'ROUNDS 6–10 · Keep up to 3',11:'ROUNDS 11–20 · Keep up to 4'};
+
+function buildBoard() {
+  const tbody = document.getElementById('boardBody');
+  tbody.innerHTML = '';
+  BOARD_DATA.board.forEach((row, ri) => {
+    const rnd = ri+1;
+    if (TIER_LABELS[rnd]) {
+      const tr = document.createElement('tr'); tr.className='tier-row';
+      const td0 = document.createElement('td'); td0.className='round-cell'; tr.appendChild(td0);
+      const td = document.createElement('td'); td.colSpan=12; td.textContent=TIER_LABELS[rnd]; tr.appendChild(td);
+      tbody.appendChild(tr);
+    }
+    const tr = document.createElement('tr');
+    const rdTd = document.createElement('td'); rdTd.className='round-cell';
+    rdTd.innerHTML=`<span class="round-label ${rnd<=5?'t1':rnd<=10?'t2':'t3'}">R${rnd}</span>`;
+    tr.appendChild(rdTd);
+    row.forEach(cell => {
+      const td = document.createElement('td'); td.className='player-cell';
+      cell.slots.forEach((slot,si) => td.appendChild(buildCard(slot,cell.team,ri,si)));
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+}
+
+// ── FILTER ──
+let boardFilter='all', rosterFilter='all', faFilter='all';
+function setFilter(f,btn,page){
+  btn.closest('.filter-bar').querySelectorAll('.fbtn').forEach(b=>{
+    if(!b.classList.contains('amber')&&!b.classList.contains('green'))b.classList.remove('active');
+  });
+  btn.classList.add('active');
+  if(page==='board'){boardFilter=f;applyBoardFilter();}
+  if(page==='roster'){rosterFilter=f;applyRosterFilter();}
+  if(page==='fa'){faFilter=f;buildFAPage();}
+}
+function applyBoardFilter(){
+  document.querySelectorAll('#board .card').forEach(c=>{
+    const pos=c.getAttribute('data-pos')||'';
+    const rank=parseInt(c.getAttribute('data-rank'))||999;
+    const status=c.getAttribute('data-status')||'';
+    let show=true;
+    if(boardFilter==='QB') show=pos==='QB';
+    else if(boardFilter==='RB') show=pos==='RB';
+    else if(boardFilter==='WR') show=pos==='WR';
+    else if(boardFilter==='TE') show=pos==='TE';
+    else if(boardFilter==='top25') show=rank<=25;
+    else if(boardFilter==='top50') show=rank<=50;
+    else if(boardFilter==='top100') show=rank<=100;
+    else if(boardFilter==='open') show=status==='open'||status==='released';
+    else if(boardFilter==='keepers') show=status==='kept';
+    c.classList.toggle('dimmed',boardFilter!=='all'&&!show);
+  });
+}
+
+// ── ROSTER PAGE ──
+let currentRosterTeam=null;
+function openRoster(team){
+  currentRosterTeam=team;
+  document.getElementById('rosterTeamName').textContent=TEAM_NAMES[team];
+  document.getElementById('rosterOwner').textContent=TEAM_OWNERS[team];
+  document.getElementById('rosterTab').style.display='';
+  buildRosterPage(team);
+  showPage('roster',document.getElementById('rosterTab'));
+}
+function buildRosterPage(team){
+  const ti=TEAMS.indexOf(team);
+  const content=document.getElementById('rosterContent');
+  content.innerHTML='';
+  const slotInfo={};
+  BOARD_DATA.board.forEach((row,ri)=>{
+    row[ti].slots.forEach((slot,si)=>{
+      if(slot.player){
+        const key=`${team}_${ri}_${si}`;
+        if(!slotInfo[slot.player]||slot.extra)
+          slotInfo[slot.player]={round:ri+1,status:slot.status,isKept:isKeeperEligible(slot)&&!isReleased(team,ri,si),extra:!!slot.extra};
+      }
+    });
+  });
+  const players=(ROSTERS[team]||[]).map(name=>{
+    const rk=rankMap[name]||{};
+    const info=slotInfo[name]||{};
+    return{name,rank:rk.rank||999,pos:posShort(rk.pos||''),posRaw:rk.pos||'',nfl:rk.nfl_team||'',info};
+  }).sort((a,b)=>a.rank-b.rank);
+  const table=document.createElement('table');
+  table.className='roster-table';
+  table.innerHTML=`<thead><tr><th>ECR</th><th>Player</th><th>Pos</th><th>NFL</th><th>Drafted</th><th>AV</th><th>Status</th></tr></thead>`;
+  const tbody=document.createElement('tbody');
+  players.forEach(({name,rank,pos,posRaw,nfl,info})=>{
+    const tr=document.createElement('tr');
+    tr.className=`rt-row${info.isKept?' rt-keeper':''}`;
+    tr.setAttribute('data-pos',pos);
+    const rankDisp=rank<999?rank:'NR';
+    const av=rank<999?`${Math.ceil(rank/12)}.${String(rank-(Math.ceil(rank/12)-1)*12).padStart(2,'0')}`:'NR';
+    const draftedText=info.round?`R${info.round}${info.extra?' (trade)':''}`:'FA Add';
+    const statusText=info.isKept?'★ Keeping':info.status==='traded'?'Traded Away':'Released';
+    const stClass=info.isKept?'st-keeper':info.status==='traded'?'st-traded':'st-roster';
+    let avColor='';
+    if(info.round&&rank<999){const avRnd=Math.ceil(rank/12);avColor=avRnd<info.round?'color:#166534;font-weight:600':avRnd===info.round?'color:#374151':'color:#9a9890';}
+    tr.innerHTML=`
+      <td class="${rankClass(rank)}" style="font-family:'IBM Plex Mono',monospace;font-weight:500">${rankDisp}</td>
+      <td class="rt-player-name"><span class="pos-badge ${posClass(posRaw)}">${pos||'?'}</span> ${name}</td>
+      <td style="font-family:'IBM Plex Mono',monospace;font-size:11px">${pos||'?'}</td>
+      <td style="font-family:'IBM Plex Mono',monospace;font-size:11px">${nfl}</td>
+      <td style="font-family:'IBM Plex Mono',monospace;font-size:11px">${draftedText}</td>
+      <td style="font-family:'IBM Plex Mono',monospace;font-size:12px;${avColor}">${av}</td>
+      <td><span class="status-tag ${stClass}">${statusText}</span></td>`;
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody);
+  content.appendChild(table);
+}
+function applyRosterFilter(){
+  document.querySelectorAll('.rt-row').forEach(r=>{
+    const pos=r.getAttribute('data-pos')||'';
+    r.style.display=(rosterFilter==='all'||pos===rosterFilter)?'':'none';
+  });
+}
+
+// ── FREE AGENTS ──
+function computeFreeAgents(){
+  const released=new Set();
+  TEAMS.forEach(team=>{
+    const ti=TEAMS.indexOf(team);
+    BOARD_DATA.board.forEach((row,ri)=>{
+      row[ti].slots.forEach((slot,si)=>{
+        if(isKeeperEligible(slot)&&isReleased(team,ri,si)&&slot.player) released.add(slot.player);
+      });
+    });
+  });
+  // Stranded = on roster but no keeper slot (waiver adds + players whose pick was traded)
+  // These are always free agents regardless of keeper selections
+  const strandedNormalized=new Set();
+  STRANDED_PLAYERS.forEach(name=>{
+    strandedNormalized.add(name);
+    for(const [rn,ros] of Object.entries(NAME_MAP)){if(ros===name) strandedNormalized.add(rn);}
+  });
+  // Build set of players currently being kept
+  const beingKept=new Set();
+  TEAMS.forEach(team=>{
+    const ti=TEAMS.indexOf(team);
+    BOARD_DATA.board.forEach((row,ri)=>{
+      row[ti].slots.forEach((slot,si)=>{
+        if(isKeeperEligible(slot)&&!isReleased(team,ri,si)&&slot.player) beingKept.add(slot.player);
+      });
+    });
+  });
+  return RANKINGS
+    .filter(rk=>{
+      // Exclude players currently being kept
+      if(beingKept.has(rk.player)) return false;
+      // Include: unrostered, released from rosters, or stranded (no keeper slot)
+      const rostered=allRostered.has(rk.player);
+      if(!rostered) return true; // never on any roster
+      if(released.has(rk.player)) return true; // actively released
+      if(strandedNormalized.has(rk.player)) return true; // no keeper slot available
+      return false;
+    })
+    .map(rk=>{
+      const rostered=allRostered.has(rk.player);
+      const isStranded=strandedNormalized.has(rk.player);
+      const source=!rostered?'unrostered':isStranded?'stranded':'released';
+      return{...rk,source};
+    })
+    .sort((a,b)=>a.rank-b.rank);
+}
+function buildFAPage(){
+  const fas=computeFreeAgents().filter(fa=>{const ps=posShort(fa.pos);return faFilter==='all'||ps===faFilter;});
+  const tiers=[{label:'ELITE · Ranks 1–25',max:25},{label:'STARTER · Ranks 26–75',max:75},{label:'DEPTH · Ranks 76–150',max:150},{label:'DEEP SLEEPERS · Ranks 151+',max:9999}];
+  const tbody=document.getElementById('faBody');tbody.innerHTML='';
+  document.getElementById('faStats').innerHTML=`<span>Total: <strong>${fas.length}</strong></span><span>Unrostered: <strong>${fas.filter(f=>f.source==='unrostered').length}</strong></span><span>Released: <strong>${fas.filter(f=>f.source==='released').length}</strong></span>`;
+  let tierIdx=0,lastTier=-1;
+  fas.forEach(fa=>{
+    while(tierIdx<tiers.length&&fa.rank>tiers[tierIdx].max) tierIdx++;
+    if(tierIdx!==lastTier&&tierIdx<tiers.length){const tr=document.createElement('tr');tr.className='tier-header';tr.innerHTML=`<td colspan="8">${tiers[tierIdx].label}</td>`;tbody.appendChild(tr);lastTier=tierIdx;}
+    const tr=document.createElement('tr');tr.setAttribute('data-pos',posShort(fa.pos));
+    const srcClass=fa.source==='released'?'released':fa.source==='stranded'?'stranded':'unrostered';
+    const srcLabel=fa.source==='released'?'Released':fa.source==='stranded'?'No Keeper Slot':'Unrostered';
+    tr.innerHTML=`<td class="${rankClass(fa.rank)}" style="font-family:'IBM Plex Mono',monospace;font-weight:500">${fa.rank}</td><td style="font-weight:600">${fa.player}</td><td><span class="pos-badge ${posClass(fa.pos)}">${posShort(fa.pos)}</span></td><td style="font-family:'IBM Plex Mono',monospace;font-size:11px">${fa.nfl_team}</td><td style="font-family:'IBM Plex Mono',monospace;font-size:11px">${fa.best}</td><td style="font-family:'IBM Plex Mono',monospace;font-size:11px">${fa.worst}</td><td style="font-family:'IBM Plex Mono',monospace;font-size:11px">${fa.avg.toFixed(1)}</td><td><span class="fa-source ${srcClass}">${srcLabel}</span></td>`;
+    tbody.appendChild(tr);
+  });
+  if(!fas.length){const tr=document.createElement('tr');tr.innerHTML='<td colspan="8" style="text-align:center;padding:24px;color:var(--muted);font-family:monospace">No free agents</td>';tbody.appendChild(tr);}
+}
+function updateFA(){if(document.getElementById('page-fa').classList.contains('active'))buildFAPage();}
+
+function importKeepers(){
+  document.getElementById('importFile').click();
+}
+
+function handleImport(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const text = e.target.result;
+      // Reset all releases first
+      TEAMS.forEach(t => { releasedState[t] = {}; });
+      // Parse CSV: Team,Player,Round,Pick,Position,ECR Rank
+      const lines = text.split('\n').slice(1); // skip header
+      const keptSet = new Set(); // "team:player" pairs to keep
+      lines.forEach(line => {
+        const parts = line.split(',').map(s => s.replace(/^"|"$/g,'').trim());
+        if (parts.length < 2) return;
+        const teamName = parts[0];
+        const player = parts[1];
+        const teamAbbr = Object.entries(TEAM_NAMES).find(([k,v])=>v===teamName)?.[0];
+        if (teamAbbr && player) keptSet.add(`${teamAbbr}:${player}`);
+      });
+      // Release anyone NOT in the import set
+      TEAMS.forEach(team => {
+        const ti = TEAMS.indexOf(team);
+        BOARD_DATA.board.forEach((row,ri) => {
+          row[ti].slots.forEach((slot,si) => {
+            if (!isKeeperEligible(slot)) return;
+            const key = `${team}_${ri}_${si}`;
+            if (!keptSet.has(`${team}:${slot.player}`)) {
+              releasedState[team][key] = true;
+            }
+          });
+        });
+      });
+      // Rebuild all cards
+      TEAMS.forEach(team => {
+        const ti = TEAMS.indexOf(team);
+        BOARD_DATA.board.forEach((row,ri) => {
+          row[ti].slots.forEach((slot,si) => {
+            if (isKeeperEligible(slot)) buildAndReplaceCard(slot, team, ri, si);
+          });
+        });
+      });
+      refreshPickLabels();
+      updateFA();
+      alert(`Imported ${keptSet.size} keepers successfully.`);
+    } catch(err) {
+      alert('Import failed: ' + err.message);
+    }
+    event.target.value = ''; // reset file input
+  };
+  reader.readAsText(file);
+}
+
+function exportKeepers(){
+  const lines=['Team,Player,Round,Pick,Position,ECR Rank'];
+  TEAMS.forEach(team=>{
+    const ti=TEAMS.indexOf(team);
+    BOARD_DATA.board.forEach((row,ri)=>{
+      row[ti].slots.forEach((slot,si)=>{
+        if(isKeeperEligible(slot)&&!isReleased(team,ri,si)){
+          const rk=rankMap[slot.player]||{};
+          const reg=REGULAR_PICK_LABELS[team]&&REGULAR_PICK_LABELS[team][String(ri+1)];
+          lines.push(`"${TEAM_NAMES[team]}","${slot.player}",${ri+1},"${reg?reg.label:'?'}","${posShort(slot.pos)}",${rk.rank||'NR'}`);
+        }
+      });
+    });
+  });
+  const blob=new Blob([lines.join('\n')],{type:'text/csv'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='keepers_2026.csv';a.click();
+}
+
+function showPage(name,tabEl){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById(`page-${name}`).classList.add('active');
+  if(tabEl) tabEl.classList.add('active');
+  requestAnimationFrame(()=>{
+    const nav=document.getElementById('appNav');
+    const fb=document.querySelector(`#page-${name} .filter-bar`);
+    if(nav&&fb) fb.style.top=nav.offsetHeight+'px';
+    if(name==='board') fixTeamHeaderSticky();
+    if(name==='fa') buildFAPage();
+    if(name==='roster'&&currentRosterTeam) buildRosterPage(currentRosterTeam);
+  });
+}
+
+function fixTeamHeaderSticky(){
+  const nav=document.getElementById('appNav');
+  const fb=document.getElementById('boardFilterBar');
+  const tb=document.getElementById('teamHeaderBar');
+  const inner=document.getElementById('teamHeaderInner');
+  if(!nav||!fb||!tb) return;
+  void nav.offsetHeight;
+  fb.style.top=nav.offsetHeight+'px';
+  void fb.offsetHeight;
+  tb.style.top=(nav.offsetHeight+fb.offsetHeight)+'px';
+  // Sync column widths from actual table
+  const firstRow=document.querySelector('#board tbody tr:not(.tier-row)');
+  if(firstRow&&inner){
+    const cells=firstRow.cells;
+    const headers=inner.children;
+    for(let i=0;i<cells.length&&i<headers.length;i++){
+      const w=cells[i].offsetWidth+'px';
+      headers[i].style.width=w;
+      headers[i].style.minWidth=w;
+    }
+  }
+}
+function syncHeaderScroll(){
+  const sc=document.getElementById('scrollContainer');
+  const inner=document.getElementById('teamHeaderInner');
+  if(sc&&inner) inner.style.transform=`translateX(-${sc.scrollLeft}px)`;
+}
+
+try{buildBoard();}catch(err){
+  document.getElementById('boardBody').innerHTML=`<tr><td colspan="13" style="padding:24px;color:red;font-family:monospace">ERROR: ${err.message}<br><pre>${err.stack}</pre></td></tr>`;
+}
+requestAnimationFrame(()=>requestAnimationFrame(fixTeamHeaderSticky));
+window.addEventListener('resize',fixTeamHeaderSticky);
+window.addEventListener('load',()=>{fixTeamHeaderSticky();buildFAPage();});
+const _sc=document.getElementById('scrollContainer');
+if(_sc) _sc.addEventListener('scroll',syncHeaderScroll,{passive:true});
+</script></body></html>
