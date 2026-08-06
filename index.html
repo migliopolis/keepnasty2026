@@ -150,7 +150,7 @@ tr.tier-row td.round-cell{background:#1a1916;border-right:2px solid var(--gold);
 .tt-open-badge{font-family:'IBM Plex Mono',monospace;font-size:10px;color:#4a9e3f;font-weight:600}
 .av-val{color:#166534;font-weight:600}.av-fair{color:#374151}.av-costly{color:#9a9890}
 .shares-warning{font-size:9px;color:#b45309;font-family:'IBM Plex Mono',monospace;background:#fef3c7;border-radius:3px;padding:1px 5px;margin-left:6px}
-</style></head><body><nav class="app-nav" id="appNav"><div class="nav-inner"><div class="nav-brand"><div class="sub">KEEPNASTY &middot; 2026</div><h1>Keeper Board</h1></div><button class='nav-tab active' onclick="showPage('board',this)">Draft Board</button><button class='nav-tab' id='rosterTab' onclick="showPage('roster',this)" style='display:none'>&#8592; Roster</button><button class='nav-tab' onclick="showPage('fa',this)">Free Agents</button><div class="nav-legend"><div class="leg"><div class="leg-dot" style="background:#4a9e3f"></div>Keeping (click to release)</div><div class="leg"><div class="leg-dot" style="background:#fafaf9;border:1.5px dashed #d0cec4"></div>No Pick</div><div class="leg"><div class="leg-dot" style="background:#f7fbf7;border:1.5px dashed #a3cfaa"></div>Open Pick</div><div class="leg"><div class="leg-dot" style="background:#fdf2f2;border:1.5px dashed #fca5a5"></div>Released (click to keep)</div></div></div></nav><div class="page active" id="page-board"><div class="filter-bar" id="boardFilterBar" style="top:0"><span class="filter-label">FILTER</span><button class='fbtn active' onclick="setFilter('all',this,'board')">All</button><button class='fbtn' onclick="setFilter('QB',this,'board')">QB</button><button class='fbtn' onclick="setFilter('RB',this,'board')">RB</button><button class='fbtn' onclick="setFilter('WR',this,'board')">WR</button><button class='fbtn' onclick="setFilter('TE',this,'board')">TE</button><button class='fbtn' onclick="setFilter('top25',this,'board')">Top 25</button><button class='fbtn' onclick="setFilter('top50',this,'board')">Top 50</button><button class='fbtn' onclick="setFilter('top100',this,'board')">Top 100</button><button class='fbtn' onclick="setFilter('open',this,'board')">Open Picks</button><button class='fbtn' onclick="setFilter('keepers',this,'board')">Keeping</button><div class="divider-v"></div><button class='fbtn amber' id='predictBtn' onclick='togglePredict()'>&#9733; Predict Keepers</button><button class='fbtn' id='clearBtn' onclick='reinstateAll()' style='display:none'>&#10005; Reset All</button><div class="divider-v"></div><button class='fbtn green' onclick='exportKeepers()'>Export</button> <button class='fbtn green' onclick='importKeepers()'>Import</button> <input type='file' id='importFile' accept='.csv' style='display:none' onchange='handleImport(event)'></div><div class="team-header-bar" id="teamHeaderBar"><div class="team-header-inner" id="teamHeaderInner"><div class="rnd-spacer"></div><div class="team-col-header" onclick="openRoster('BPE')"><div class="tch-name">Big Penix Energy</div><div class="tch-owner">Rahul</div><div class="tch-hint">View Roster &#8599;</div></div><div class="team-col-header" onclick="openRoster('TNT')"><div class="tch-name">Tennessee Tuxedos</div><div class="tch-owner">Dave</div><div class="tch-hint">View Roster &#8599;</div></div><div class="team-col-header" onclick="openRoster('AMS')"><div class="tch-name">Zal Werken Voor Vissen</div><div class="tch-owner">Alan</div><div class="tch-hint">View Roster &#8599;</div></div><div class="team-col-header" onclick="openRoster('MOON')"><div class="tch-name">Moon Mammoths</div><div class="tch-owner">Brett</div><div class="tch-hint">View Roster &#8599;</div></div><div class="team-col-header" onclick="openRoster('BBQ')"><div class="tch-name">BBQ Rice</div><div class="tch-owner">Nate</div><div class="tch-hint">View Roster &#8599;</div></div><div class="team-col-header" onclick="openRoster('SHAY')"><div class="tch-name">Skokie Shakes</div><div class="tch-owner">Marc</div><div class="tch-hint">View Roster &#8599;</div></div><div class="team-col-header" onclick="openRoster('PLZ')"><div class="tch-name">Choosing Beggars</div><div class="tch-owner">Sean</div><div class="tch-hint">View Roster &#8599;</div></div><div class="team-col-header" onclick="openRoster('KOBY')"><div class="tch-name">Riley Reid Option</div><div class="tch-owner">Koby</div><div class="tch-hint">View Roster &#8599;</div></div><div class="team-col-header" onclick="openRoster('FU')"><div class="tch-name">Son of Thor</div><div class="tch-owner">Colin</div><div class="tch-hint">View Roster &#8599;</div></div><div class="team-col-header" onclick="openRoster('SWET')"><div class="tch-name">The MoistureMakers</div><div class="tch-owner">Ronnie</div><div class="tch-hint">View Roster &#8599;</div></div><div class="team-col-header" onclick="openRoster('TMAL')"><div class="tch-name">Maloney Football Team</div><div class="tch-owner">Terri</div><div class="tch-hint">View Roster &#8599;</div></div><div class="team-col-header" onclick="openRoster('PRE')"><div class="tch-name">Hollywood Premieres</div><div class="tch-owner">Paul</div><div class="tch-hint">View Roster &#8599;</div></div></div></div><div class="scroll-container" id="scrollContainer"><table class="board-table" id="board"><tbody id="boardBody"></tbody></table></div></div><div class="page" id="page-roster">
+</style></head><body><nav class="app-nav" id="appNav"><div class="nav-inner"><div class="nav-brand"><div class="sub">KEEPNASTY &middot; 2026</div><h1>Keeper Board</h1><div class="sub" style="color:#f0c040;margin-top:2px">v1.0</div></div><button class='nav-tab active' onclick="showPage('board',this)">Draft Board</button><button class='nav-tab' id='rosterTab' onclick="showPage('roster',this)" style='display:none'>&#8592; Roster</button><button class='nav-tab' onclick="showPage('fa',this)">Free Agents</button><div class="nav-legend"><div class="leg"><div class="leg-dot" style="background:#4a9e3f"></div>Keeping (click to release)</div><div class="leg"><div class="leg-dot" style="background:#fafaf9;border:1.5px dashed #d0cec4"></div>No Pick</div><div class="leg"><div class="leg-dot" style="background:#f7fbf7;border:1.5px dashed #a3cfaa"></div>Open Pick</div><div class="leg"><div class="leg-dot" style="background:#fdf2f2;border:1.5px dashed #fca5a5"></div>Released (click to keep)</div></div></div></nav><div class="page active" id="page-board"><div class="filter-bar" id="boardFilterBar" style="top:0"><span class="filter-label">FILTER</span><button class='fbtn active' onclick="setFilter('all',this,'board')">All</button><button class='fbtn' onclick="setFilter('QB',this,'board')">QB</button><button class='fbtn' onclick="setFilter('RB',this,'board')">RB</button><button class='fbtn' onclick="setFilter('WR',this,'board')">WR</button><button class='fbtn' onclick="setFilter('TE',this,'board')">TE</button><button class='fbtn' onclick="setFilter('top25',this,'board')">Top 25</button><button class='fbtn' onclick="setFilter('top50',this,'board')">Top 50</button><button class='fbtn' onclick="setFilter('top100',this,'board')">Top 100</button><button class='fbtn' onclick="setFilter('open',this,'board')">Open Picks</button><button class='fbtn' onclick="setFilter('keepers',this,'board')">Keeping</button><div class="divider-v"></div><button class='fbtn amber' id='predictBtn' onclick='togglePredict()'>&#9733; Predict Keepers</button><button class='fbtn' id='clearBtn' onclick='reinstateAll()' style='display:none'>&#10005; Reset All</button><div class="divider-v"></div><button class='fbtn green' onclick='exportKeepers()'>Export</button> <button class='fbtn green' onclick='importKeepers()'>Import</button> <input type='file' id='importFile' accept='.csv' style='display:none' onchange='handleImport(event)'></div><div class="team-header-bar" id="teamHeaderBar"><div class="team-header-inner" id="teamHeaderInner"><div class="rnd-spacer"></div><div class="team-col-header" onclick="openRoster('BPE')"><div class="tch-name">Big Penix Energy</div><div class="tch-owner">Rahul</div><div class="tch-hint">View Roster &#8599;</div></div><div class="team-col-header" onclick="openRoster('TNT')"><div class="tch-name">Tennessee Tuxedos</div><div class="tch-owner">Dave</div><div class="tch-hint">View Roster &#8599;</div></div><div class="team-col-header" onclick="openRoster('AMS')"><div class="tch-name">Zal Werken Voor Vissen</div><div class="tch-owner">Alan</div><div class="tch-hint">View Roster &#8599;</div></div><div class="team-col-header" onclick="openRoster('MOON')"><div class="tch-name">Moon Mammoths</div><div class="tch-owner">Brett</div><div class="tch-hint">View Roster &#8599;</div></div><div class="team-col-header" onclick="openRoster('BBQ')"><div class="tch-name">BBQ Rice</div><div class="tch-owner">Nate</div><div class="tch-hint">View Roster &#8599;</div></div><div class="team-col-header" onclick="openRoster('SHAY')"><div class="tch-name">Skokie Shakes</div><div class="tch-owner">Marc</div><div class="tch-hint">View Roster &#8599;</div></div><div class="team-col-header" onclick="openRoster('PLZ')"><div class="tch-name">Choosing Beggars</div><div class="tch-owner">Sean</div><div class="tch-hint">View Roster &#8599;</div></div><div class="team-col-header" onclick="openRoster('KOBY')"><div class="tch-name">Riley Reid Option</div><div class="tch-owner">Koby</div><div class="tch-hint">View Roster &#8599;</div></div><div class="team-col-header" onclick="openRoster('FU')"><div class="tch-name">Son of Thor</div><div class="tch-owner">Colin</div><div class="tch-hint">View Roster &#8599;</div></div><div class="team-col-header" onclick="openRoster('SWET')"><div class="tch-name">The MoistureMakers</div><div class="tch-owner">Ronnie</div><div class="tch-hint">View Roster &#8599;</div></div><div class="team-col-header" onclick="openRoster('TMAL')"><div class="tch-name">Maloney Football Team</div><div class="tch-owner">Terri</div><div class="tch-hint">View Roster &#8599;</div></div><div class="team-col-header" onclick="openRoster('PRE')"><div class="tch-name">Hollywood Premieres</div><div class="tch-owner">Paul</div><div class="tch-hint">View Roster &#8599;</div></div></div></div><div class="scroll-container" id="scrollContainer"><table class="board-table" id="board"><tbody id="boardBody"></tbody></table></div></div><div class="page" id="page-roster">
   <div class="filter-bar" style="top:0">
     <span class="filter-label">POSITION</span>
     <button class="fbtn active" onclick="setFilter('all',this,'roster')">All</button>
@@ -324,20 +324,28 @@ function getOpenPickLabel(team,rnd,si){return openPickLabels[`${team}_${rnd}_${s
 function toggleRelease(team,ri,si,slot){
   const key=`${team}_${ri}_${si}`;
   const currently=isReleased(team,ri,si);
+  const ti=TEAMS.indexOf(team);
+  const cell=BOARD_DATA.board[ri][ti];
+  const hasSharesPick=cell.slots.some(s=>s.shares_pick);
+
   if(currently){
+    // Reinstating this player
     const check=canKeep(team,slot,ri,si);
     if(!check.ok){showLimitModal(team,ri,si,slot,check);return;}
-    // Check shares_pick constraint
-    if(slot.shares_pick&&sharesPickBlocked(team,ri,si)){
-      alert(`Can't keep ${slot.player} — ${getSlot(team,ri,0)?.player} is already using this round's pick. Release them first.`);
-      return;
+
+    if(hasSharesPick){
+      // Release all other eligible slots in this cell first (one pick only)
+      cell.slots.forEach((s,i)=>{
+        if(i!==si&&isKeeperEligible(s)){
+          releasedState[team][`${team}_${ri}_${i}`]=true;
+        }
+      });
     }
     releasedState[team][key]=false;
   } else {
-    // Releasing
+    // Releasing this player
     releasedState[team][key]=true;
-    // If this is primary (si=0) and a shares_pick partner is kept, that's now fine
-    // (partner was using this pick, now pick could be open or partner stays kept)
+    // No other enforcement needed on release
   }
   rebuildTeamOnBoard(team);
   refreshPickLabels();
@@ -455,6 +463,8 @@ function runPredictForTeam(team){
 function reinstateAll(){
   predictMode=false;
   TEAMS.forEach(t=>{releasedState[t]={};});
+  // Re-apply shares_pick defaults for all teams
+  initSharesPickState();
   TEAMS.forEach(team=>rebuildTeamOnBoard(team));
   document.getElementById('predictBtn').classList.remove('active');
   document.getElementById('predictBtn').textContent='★ Predict Keepers';
@@ -502,7 +512,7 @@ function buildCard(slot,team,ri,si){
     const ti=TEAMS.indexOf(team),cell=BOARD_DATA.board[ri][ti];
     // For shares_pick cells: pick is used if ANY other eligible slot is still kept
     const hasSharesPick=cell.slots.some(s=>s.shares_pick);
-    const partnerKept=hasSharesPick&&cell.slots.some((s,i)=>i!==si&&isKeeperEligible(s)&&!isReleased(team,ri,i)&&s.status==='kept');
+    const partnerKept=hasSharesPick&&cell.slots.some((s,i)=>i!==si&&isKeeperEligible(s)&&!isReleased(team,ri,i));
     if(partnerKept){
       el.innerHTML=`<span class="no-pick-label" style="color:#b45309">PICK USED</span><span class="no-pick-sub">${slot.player} — RELEASED</span>`;
     } else {
@@ -517,7 +527,7 @@ function buildCard(slot,team,ri,si){
   const av=ecrToAV(rank);
   let avHtml='';
   if(av){const avClass=av.rnd<rnd?'av-value':av.rnd===rnd?'av-fair':'av-costly';avHtml=`<span class="meta-label" style="margin-left:3px">AV</span><span class="av-num ${avClass}">${av.label}</span>`;}
-  const sharesNote=slot.shares_pick?'<span class="shared-round-note">↑ shares pick</span>':'';
+  const sharesNote=slot.shares_pick?'<span class="shared-round-note">one pick — or keep primary</span>':'';
   el.innerHTML=`<div class="card-name">${slot.player}${slot.extra&&!slot.shares_pick?'<span class="extra-badge" style="margin-left:4px;font-size:8px">+TRADE</span>':''}</div><div class="card-meta"><span class="pos-badge ${posClass(slot.pos)}">${posGroup||ps}</span><span class="meta-label">POS</span><span class="rank-num">${posRankNum||'—'}</span><span class="meta-label">OVR</span><span class="rank-num ${rankClass(rank)}">${rank<999?rank:'NR'}</span>${avHtml}<span class="nfl-tag">${rk.nfl_team||slot.nfl_team||''}</span></div>${sharesNote}`;
   if(isKeeperEligible(slot)){el.addEventListener('click',()=>toggleRelease(team,ri,si,slot));el.title='Click to release';}
   return el;
@@ -784,6 +794,23 @@ function fixTeamHeaderSticky(){
 }
 function syncHeaderScroll(){const sc=document.getElementById('scrollContainer'),inner=document.getElementById('teamHeaderInner');if(sc&&inner)inner.style.transform=`translateX(-${sc.scrollLeft}px)`;}
 
+// Initialize: for shares_pick cells, only keep the primary player by default
+// (extra shares_pick player starts as released until user explicitly chooses it)
+function initSharesPickState(){
+  TEAMS.forEach(team=>{
+    const ti=TEAMS.indexOf(team);
+    BOARD_DATA.board.forEach((row,ri)=>{
+      row[ti].slots.forEach((slot,si)=>{
+        if(slot.shares_pick&&isKeeperEligible(slot)){
+          // Start shares_pick extras as released (pick used by primary)
+          releasedState[team][`${team}_${ri}_${si}`]=true;
+        }
+      });
+    });
+  });
+}
+initSharesPickState();
+
 try{buildBoard();}catch(err){document.getElementById('boardBody').innerHTML=`<tr><td colspan="13" style="padding:24px;color:red;font-family:monospace">ERROR: ${err.message}<br><pre>${err.stack}</pre></td></tr>`;}
 requestAnimationFrame(()=>requestAnimationFrame(fixTeamHeaderSticky));
 window.addEventListener('resize',fixTeamHeaderSticky);
@@ -800,6 +827,15 @@ function runPredictForTeamPage(){
 function reinstateTeam(){
   if(!currentRosterTeam) return;
   releasedState[currentRosterTeam]={};
+  // Re-apply shares_pick defaults (extras start released)
+  const ti=TEAMS.indexOf(currentRosterTeam);
+  BOARD_DATA.board.forEach((row,ri)=>{
+    row[ti].slots.forEach((slot,si)=>{
+      if(slot.shares_pick&&isKeeperEligible(slot)){
+        releasedState[currentRosterTeam][`${currentRosterTeam}_${ri}_${si}`]=true;
+      }
+    });
+  });
   rebuildTeamOnBoard(currentRosterTeam);
   refreshPickLabels();updateFA();buildRosterPage(currentRosterTeam);
 }
