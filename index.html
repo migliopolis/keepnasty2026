@@ -793,14 +793,17 @@ function buildFAPage(){
   let ti=0,lt=-1;
   fas.forEach(fa=>{
     while(ti<tiers.length&&fa.rank>tiers[ti].max) ti++;
-    if(ti!==lt&&ti<tiers.length){const tr=document.createElement('tr');tr.className='tier-header';tr.innerHTML=`<td colspan="8">${tiers[ti].label}</td>`;tbody.appendChild(tr);lt=ti;}
+    if(ti!==lt&&ti<tiers.length){const tr=document.createElement('tr');tr.className='tier-header';tr.innerHTML=`<td colspan="7">${tiers[ti].label}</td>`;tbody.appendChild(tr);lt=ti;}
     const tr=document.createElement('tr');tr.setAttribute('data-pos',posShort(fa.pos));
     const sc=fa.source==='released'?'released':fa.source==='stranded'?'stranded':'unrostered';
     const sl=fa.source==='released'?'Released':fa.source==='stranded'?'No Keeper Slot':'Unrostered';
-    tr.innerHTML=`<td class="${rankClass(fa.rank)}" style="font-family:'IBM Plex Mono',monospace;font-weight:500">${fa.rank}</td><td style="font-weight:600">${fa.player}</td><td><span class="pos-badge ${posClass(fa.pos)}">${posShort(fa.pos)}</span></td><td style="font-family:'IBM Plex Mono',monospace;font-size:11px">${fa.nfl_team}</td><td style="font-family:'IBM Plex Mono',monospace;font-size:11px">${fa.best}</td><td style="font-family:'IBM Plex Mono',monospace;font-size:11px">${fa.worst}</td><td style="font-family:'IBM Plex Mono',monospace;font-size:11px">${fa.avg.toFixed(1)}</td><td><span class="fa-source ${sc}">${sl}</span></td>`;
+    const faAV=ecrToAVLabel(fa.rank);
+    const faAvRnd=fa.rank<999?Math.ceil(fa.rank/12):999;
+    const faAvClass=faAvRnd<=1?'rank-elite':faAvRnd<=3?'rank-great':faAvRnd<=8?'rank-solid':'rank-fringe';
+    tr.innerHTML=`<td class="${rankClass(fa.rank)}" style="font-family:'IBM Plex Mono',monospace;font-weight:500">${fa.rank}</td><td style="font-weight:600">${fa.player}</td><td><span class="pos-badge ${posClass(fa.pos)}">${posShort(fa.pos)}</span></td><td style="font-family:'IBM Plex Mono',monospace;font-size:11px">${fa.nfl_team}</td><td class="${faAvClass}" style="font-family:'IBM Plex Mono',monospace;font-size:11px">${faAV}</td><td style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted)">T${fa.tier||'?'}</td><td><span class="fa-source ${sc}">${sl}</span></td>`;
     tbody.appendChild(tr);
   });
-  if(!fas.length){const tr=document.createElement('tr');tr.innerHTML='<td colspan="8" style="text-align:center;padding:24px;color:var(--muted)">No free agents</td>';tbody.appendChild(tr);}
+  if(!fas.length){const tr=document.createElement('tr');tr.innerHTML='<td colspan="7" style="text-align:center;padding:24px;color:var(--muted)">No free agents</td>';tbody.appendChild(tr);}
 }
 function updateFA(){if(document.getElementById('page-fa').classList.contains('active'))buildFAPage();}
 
