@@ -412,7 +412,13 @@ Object.entries(NAME_MAP).forEach(([from,to])=>{
   if(rankMap[to]&&!rankMap[from]) rankMap[from]=rankMap[to];
   if(rankMap[from]&&!rankMap[to]) rankMap[to]=rankMap[from];
 });
-const allRosteredSet=new Set(Object.values(ROSTERS).flat());
+const _rosterFlat=Object.values(ROSTERS).flat();
+const allRosteredSet=new Set(_rosterFlat);
+// Expand with NAME_MAP variants (both directions) so 'Patrick Mahomes' also blocks 'Patrick Mahomes II'
+_rosterFlat.forEach(name=>{
+  if(NAME_MAP[name]) allRosteredSet.add(NAME_MAP[name]);
+  Object.entries(NAME_MAP).forEach(([k,v])=>{if(v===name) allRosteredSet.add(k);});
+});
 
 // ── RELEASE STATE ──
 const releasedState={};
